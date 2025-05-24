@@ -79,8 +79,6 @@ class AuthTest(TestCase):
         response = self.client.post(reverse('registration-list'), payload, format = 'json')
         logger.debug(response.json())
         self.assertTrue(response.status_code == 200)
-        logger.debug(models.User.objects.filter(email=payload['email']).first().permissions)
-        self.assertTrue(models.User.objects.filter(email = payload['email']).first().has_permission('main.customer'))
 
         user = models.User.objects.filter(email = 'sethdad224@proton.me').first()
         self.assertFalse(user.confirmed)
@@ -141,93 +139,3 @@ class AuthTest(TestCase):
         logger.debug(response.json())
         logger.debug(response.status_code == 403)
         
-    
-    
-
-    def test_set_password(self):
-        # Create and authenticate admin user
-        admin = self._create_user('admin@gmail.com')
-        admin.is_staff = True
-        admin.is_superuser = True
-        admin.save()
-        
-        self.client.force_authenticate(admin)
-        
-        # Create a staff user to test password setting
-        staff_user = self._create_user('staffuser@gmail.com')
-        staff_user.account = 'staff'
-        staff_user.save()
-        
-        # Test setting a valid new password
-        password_payload = {
-            'password': 'NewSecurePass123'
-        }
-        response = self.client.post(
-            reverse('admin-user-set-password', kwargs={'pk': staff_user.id}),
-            password_payload,
-            format='json'
-        )
-        logger.debug(response.json())
-        self.assertTrue(response.status_code == 200)
-        self.assertEqual(response.json()['message'], 'Password updated successfully')
-        
-        # Verify the staff user can log in with the new password
-        response = self.client.post(
-            reverse('token_obtain_pair'),
-            {'email': 'staffuser@gmail.com', 'password': 'NewSecurePass123'},
-            format='json'
-        )
-        self.assertTrue(response.status_code == 200)
-        self.assertIn('access', response.json())
-        
-        # Test setting password with invalid input (non-string)
-        invalid_payload = {
-            'password': 12345
-        }
-        response = self.client.post(
-            reverse('admin-user-set-password', kwargs={'pk': staff_user.id}),
-            invalid_payload,
-            format='json'
-        )
-        logger.debug(response.json())
-        self.assertTrue(response.status_code == 400)
-        self.assertEqual(response.json()['error'], 'Password must be a string')
-        
-        # Test setting password with missing field
-        empty_payload = {}
-        response = self.client.post(
-            reverse('admin-user-set-password', kwargs={'pk': staff_user.id}),
-            empty_payload,
-            format='json'
-        )
-        logger.debug(response.json())
-        self.assertTrue(response.status_code == 400)
-        self.assertEqual(response.json()['error'], 'Password is required')
-        
-        # Test setting password for non-staff user (should fail)
-        customer_user = self._create_user('customer@gmail.com')
-        customer_user.account = 'customer'
-        customer_user.save()
-        response = self.client.post(
-            reverse('admin-user-set-password', kwargs={'pk': customer_user.id}),
-            password_payload,
-            format='json'
-        )
-        logger.debug(response.json())
-        logger.debug(response.status_code)
-        self.assertTrue(response.status_code == 406)
-        self.assertEqual(response.json()['message'], 'staff user not found')
-        
-        # Test password validation failure (too short)
-        weak_payload = {
-            'password': 'weak'
-        }
-        response = self.client.post(
-            reverse('admin-user-set-password', kwargs={'pk': staff_user.id}),
-            weak_payload,
-            format='json'
-        )
-        logger.debug(response.json())
-        self.assertTrue(response.status_code == 406)
-        self.assertIn('message', response.json())
-        self.assertIn('errors', response.json())

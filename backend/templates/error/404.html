@@ -1,0 +1,18 @@
+{% extends 'form_template.html' %}
+{% block title %} Page Not Found{% endblock %}
+{% block main %}
+<!-- ======= Contact Section ======= -->
+    <section id="contact" class="contact">
+        <div class="container">
+
+        <div class="section-header">
+          <h2 class='fs-2 mb-2'>404 PAGE NOT FOUND!</h2>
+          <p class='text-muted mb-2'>The resource your are looking for is not available at this URL.</p>
+        <a class='d-block' href='javascript: history.back();'> Back </a>
+        <a href='{% url "home" %}'> Go Back To Homepage </a>
+        </div>
+
+      </div>
+
+    </section><!-- End Contact Section -->
+{% endblock %}

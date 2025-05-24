@@ -1,0 +1,131 @@
+{
+    "consulting": [
+        {
+            "id": 1,
+            "renew": true,
+            "type": "Solo Hourly",
+            "popular": false,
+            "pricing": 35,
+            "description": "Get started with basic features",
+            "features": [
+                "Duration: 1 hour",
+                "Price: $35 per hour",
+                "Maximum: 1 person"
+            ]
+        },
+        {
+            "renew": true,
+            "id": 2,
+            "type": "Group Hourly",
+            "popular": true,
+            "pricing": 28,
+            "description": "All the basics for starting a new business",
+            "features": [
+                "Duration: 1 hour",
+                "Price: $38 per hour",
+                "Maximum: 3 persons"
+            ]
+        },
+
+        {
+            "type": "Solo Half Hour",
+            "id": 3,
+            "renew": true,
+            "popular": false,
+            "pricing": 25,
+            "description": "Everything you need for a growing business",
+            "features": [
+                "Duration: 30 Minutes",
+                "Price: $25 per Half Hour",
+                "Maximum: 1 person"
+            ]
+        },
+
+        {
+            "type": "Group Half Hour",
+            "id": 4,
+            "renew": true,
+            "popular": false,
+            "pricing": 22,
+            "description": "Advanced features for scaling your business",
+            "features": [
+                "Duration: 30 Minutes",
+                "Price: $22 per Half Hour per Person",
+                "Maximum: 3 person"
+            ]
+        }
+    ],
+
+    "premium": [
+        {
+            "type": "Pay as you go",
+            "id": 1,
+            "renew": false,
+            "pricing": 56,
+            "price tag": "$56 / recommendation",
+            "features": [
+                "Trade recommendations with no commitment.",
+                "Price: USD $56 per trade recommendation"
+            ],
+            "communication": [
+                "In Person",
+                "Viber",
+                "Phone",
+                "Skype",
+                "Telegram",
+                "Google Meet",
+                "Zoom",
+                "Whatsapp"
+            ]
+        },
+        {
+            "type": "Gold",
+            "id": 2,
+            "renew": true,
+            "pricing": 1000,
+            "price tag": "$1000",
+            "features": [
+                "One hour consultation per month for one calendar year",
+                "24 trade recommendations over the course of one calendar year.",
+                "Price: USD $1,000 (Paid in Full)"
+            ],
+            "communication": [
+                "In Person",
+                "Viber",
+                "Phone",
+                "Skype",
+                "Telegram",
+                "Google Meet",
+                "Zoom",
+                "Whatsapp"
+            ]
+        },
+
+        {
+            "type": "VIP",
+            "id": 3,
+            "pricing": 1800,
+            "renew": true,
+            "price tag": "$1,800 / year",
+            "features": [
+                "One hour consultation per month for one calendar year.",
+                "24 trade recommendations over the course of one calendar year.",
+                "10% of the overall company net profits split equally and distributed to each client.",
+                "Bonus pool is split equally among all VIP members.",
+                "Access to a portfolio of cryptocurrency investments dating back to 2017.",
+                "Access to a portfolio of cryptocurrency investments dating back to 2017.",
+                "Price: USD $1,800"
+            ],
+            "communication": [
+                "In Person",
+                "Viber",
+                "Phone",
+                "Skype",
+                "Telegram",
+                "Google Meet",
+                "Zoom",
+                "Whatsapp"
+            ]
+        }
+    ]
+}

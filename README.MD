@@ -66,12 +66,13 @@ This guide provides step-by-step instructions to set up and run the Django appli
    python manage.py migrate
    ```
 
-6. **Run the Django Server**
+6. **Run the Django Server and Celery**
 
    Start the Django development server.
 
    ```bash
    ./manage.py runserver
+   celery -A backend worker -l INFO
    ```
 
    The server will run on `localhost:8000` by default.

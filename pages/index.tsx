@@ -1,115 +1,178 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+'use client';
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { ConnectButton } from '@mysten/dapp-kit';
+import { use, useEffect } from 'react';
+import { useRouter } from "next/router";
+import { useState } from "react";
+import React from "react";
+import { toast } from "react-toastify";
+import { storeTokens, isAuthenticated } from "../utils/auth";
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+export default function SignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const account = useCurrentAccount();
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+  // Generate or get keypair for the user
+  const getOrCreateKeypair = () => {
+    const storedKeypair = localStorage.getItem('userKeypair');
+    if (storedKeypair) {
+      try {
+        const keypairData = JSON.parse(storedKeypair);
+        return Ed25519Keypair.fromSecretKey(new Uint8Array(keypairData.secretKey));
+      } catch (error) {
+        console.error('Error loading stored keypair:', error);
+      }
+    }
+    
+    // Generate new keypair if none exists
+    const newKeypair = Ed25519Keypair.generate();
+    const keypairData = {
+      secretKey: Array.from(newKeypair.getSecretKey()),
+      publicKey: newKeypair.getPublicKey().toBase64()
+    };
+    localStorage.setItem('userKeypair', JSON.stringify(keypairData));
+    return newKeypair;
+  };
 
-export default function Home() {
+  useEffect(() => {
+    // Only redirect if user is already authenticated (regardless of wallet connection)
+    if (isAuthenticated()) {
+      router.push('/home');
+      return;
+    }
+  }, [router])
+
+  const handleSignIn = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      // Call the authentication API
+      const response = await fetch('http://192.168.103.194:8000/auth/token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.detail || 'Invalid email or password');
+        } catch (e) {
+          throw new Error('Failed to sign in');
+        }
+      }
+      
+      const data = await response.json();
+      
+      // Store the authentication token
+      storeTokens(data);
+      
+     
+      // Successfully logged in
+      toast.success('Sign in successful!');
+      
+      // Always redirect to home dashboard after successful authentication
+      router.push('/home');
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error(error instanceof Error ? error.message : 'Sign in failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className='md:flex md:flex-row h-screen'>
+      {/* Full width mobile banner */}
+      <div className="md:hidden w-full bg-blue-600 py-6 px-4 flex flex-col justify-center items-center relative">
+        <div className="absolute inset-0 bg-cover bg-center"
+             style={{backgroundImage: "url('/sui-waves.svg')"}}></div>
+        <div className="relative z-10 text-white text-center">
+          <div className="flex items-center justify-center">
+            <img src="/suiflow.png" className="w-7 h-7 mr-2" alt="Sui-Fund Logo" />
+            <h1 className="text-3xl font-bold">Sui-Fund</h1>
+          </div>
+          <p className="text-sm mt-1">Effortless Saving, Real Outcome.</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
+
+      {/* Left side with form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center py-6 px-5">
+        <div className="w-full max-w-md">
+          <h2 className="text-2xl md:text-3xl font-bold mb-1 flex justify-center">Sign In to Sui-Fund</h2>
+          
+          <div className="w-full h-full flex flex-col justify-center mt-6">
+            <form onSubmit={handleSignIn} className="mb-6 flex flex-col">
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2 font-medium">Email</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-700"
+                placeholder="example@gmail.com"
+                required
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700 mb-2 font-medium">Password</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md text-gray-700"
+                placeholder="atleast 8 characters"
+                required
+              />
+            </div>
+
+            <div className="mb-6">
+              <a href="#" className="text-blue-500 hover:text-blue-700 transition-colors">Forgot your password?</a>
+            </div>
+            
+            <button 
+              type="submit"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-md transition-colors shadow-sm font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+          
+          <div className="text-center">
+            <p className="text-gray-700">
+              Don't have an account? <a href="/onboarding" className="text-blue-500 hover:text-blue-700 font-medium">Sign Up</a>
+            </p>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side with background image and logo - hidden on mobile */}
+      <div className="hidden md:flex md:w-1/2 bg-blue-600 flex-col justify-center items-center relative">
+        <div className="absolute inset-0 bg-cover bg-center" 
+             style={{backgroundImage: "url('/sui-waves.svg')"}}></div>
+        <div className="relative z-10 text-white text-center">
+          <div className="flex items-center mb-4">
+            <img src="/suiflow.png" className="w-8 h-8 mr-2" alt="Sui-Fund Logo" />
+            <h1 className="text-4xl font-bold">Sui-Fund</h1>
+          </div>
+          <p className="text-xl">Effortless Saving, Real Outcome.</p>
+        </div>
+      </div>
     </div>
   );
 }

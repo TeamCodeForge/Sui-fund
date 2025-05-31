@@ -5,6 +5,8 @@ import time
 from main.mailer import SesMailSender
 from celery.utils.log import get_task_logger
 from django.core.files.base import ContentFile
+import asyncio
+
 
 logger = get_task_logger(__name__)
 
@@ -12,6 +14,8 @@ logger = get_task_logger(__name__)
 def sample_task():
 	time.sleep(5)
 	return True
+
+
 
 @shared_task
 def celery_send_email(subject, 
@@ -37,3 +41,9 @@ def celery_send_email(subject,
 
 
 
+
+@shared_task
+def call_sui_contract_task():
+    from ajo.sui_tools import call_sui_smart_contract  # adjust path
+    asyncio.run(call_sui_smart_contract())
+    return True

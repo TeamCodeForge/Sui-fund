@@ -148,7 +148,10 @@ class RegistrationSerializer(serializers.Serializer):
             username = validated_data['username'],
             first_name = validated_data['first_name'],
             last_name = validated_data['last_name'],
-            password = validated_data['password'])
+            password = validated_data['password'],
+            confirmed = True
+            )
+            
 
 
         logger.info('Registered a new user')

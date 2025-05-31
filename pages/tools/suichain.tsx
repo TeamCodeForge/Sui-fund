@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
@@ -389,4 +390,144 @@ export async function createSavingsGroupQuick(
     contributionAmount,
     participants
   }, signerKeypair);
+}
+
+// React Component
+export default function SuiChainPage() {
+  const [groupName, setGroupName] = useState('');
+  const [cycleDuration, setCycleDuration] = useState(30);
+  const [contributionAmount, setContributionAmount] = useState(1);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string>('');
+
+  const handleAddParticipant = () => {
+    setParticipants([...participants, { wallet: '', position: participants.length + 1 }]);
+  };
+
+  const handleRemoveParticipant = (index: number) => {
+    setParticipants(participants.filter((_, i) => i !== index));
+  };
+
+  const handleParticipantChange = (index: number, field: 'wallet' | 'position', value: string | number) => {
+    const updated = [...participants];
+    updated[index] = { ...updated[index], [field]: value };
+    setParticipants(updated);
+  };
+
+  const handleCreateGroup = async () => {
+    try {
+      setLoading(true);
+      setResult('Creating savings group...');
+      
+      // This is a demo - in a real app you'd get the keypair from wallet connection
+      const keypair = Ed25519Keypair.fromSecretKey('suiprivkey1qpnd07g6rkkmusuurdk30vddzyw9ps7v2hh33tzp4ejz88ps258cckjkkd3');
+      
+      const groupId = await createSavingsGroupQuick(
+        groupName,
+        cycleDuration,
+        Date.now(),
+        contributionAmount,
+        participants,
+        keypair
+      );
+      
+      setResult(`Success! Group created with ID: ${groupId}`);
+    } catch (error) {
+      setResult(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6">Sui Savings Group</h1>
+      
+      <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Group Name</label>
+          <input
+            type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            className="w-full border rounded-md px-3 py-2"
+            placeholder="Enter group name"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Cycle Duration (days)</label>
+          <input
+            type="number"
+            value={cycleDuration}
+            onChange={(e) => setCycleDuration(Number(e.target.value))}
+            className="w-full border rounded-md px-3 py-2"
+            min="1"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Contribution Amount (SUI)</label>
+          <input
+            type="number"
+            value={contributionAmount}
+            onChange={(e) => setContributionAmount(Number(e.target.value))}
+            className="w-full border rounded-md px-3 py-2"
+            min="0.1"
+            step="0.1"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Participants</label>
+          {participants.map((participant, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Wallet address"
+                value={participant.wallet}
+                onChange={(e) => handleParticipantChange(index, 'wallet', e.target.value)}
+                className="flex-1 border rounded-md px-3 py-2"
+              />
+              <input
+                type="number"
+                placeholder="Position"
+                value={participant.position}
+                onChange={(e) => handleParticipantChange(index, 'position', Number(e.target.value))}
+                className="w-20 border rounded-md px-3 py-2"
+                min="1"
+              />
+              <button
+                onClick={() => handleRemoveParticipant(index)}
+                className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={handleAddParticipant}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Add Participant
+          </button>
+        </div>
+
+        <button
+          onClick={handleCreateGroup}
+          disabled={loading || !groupName || participants.length === 0}
+          className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
+        >
+          {loading ? 'Creating...' : 'Create Savings Group'}
+        </button>
+
+        {result && (
+          <div className={`p-4 rounded-md ${result.startsWith('Success') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {result}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

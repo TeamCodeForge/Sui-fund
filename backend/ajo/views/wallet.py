@@ -28,6 +28,17 @@ class AjoUserViewSet(viewsets.ModelViewSet):
     serializer_class = AjoUserSerializer
     permission_classes = [permissions.IsAuthenticated]
     
+    def get_object(self):
+        """
+        Override get_object to return the current user's AjoUser profile
+        instead of requiring an ID in the URL.
+        """
+        try:
+            return AjoUser.objects.get(user=self.request.user)
+        except AjoUser.DoesNotExist:
+            # This will raise a 404 error
+            from django.http import Http404
+            raise Http404("AjoUser profile not found for current user.")
     
     def perform_create(self, serializer):
         """

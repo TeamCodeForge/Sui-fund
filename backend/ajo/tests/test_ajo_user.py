@@ -89,16 +89,7 @@ class AjoUserViewSetTestCase(TestCase):
         self.assertEqual(response.data['user']['id'], self.regular_user.id)
     
 
-    def test_retrieve_ajo_user_admin_can_access_any(self):
-        """
-        Test that admin users can access any AjoUser profile
-        """
-        self.client.force_authenticate(user=self.admin_user)
-        response = self.client.get(self.detail_url(self.ajo_user_regular.id))
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.ajo_user_regular.id)
-    
+       
     def test_create_ajo_user(self):
         """
         Test creating a new AjoUser
@@ -333,18 +324,7 @@ class AjoUserViewSetTestCase(TestCase):
         self.assertEqual(response.data['user']['id'], new_user.id)
     
 
-    def test_queryset_no_filtering_for_admin(self):
-        """
-        Test that get_queryset doesn't filter for admin users
-        """
-        self.client.force_authenticate(user=self.admin_user)
-        
-        # Admin should be able to access any profile
-        response = self.client.get(self.detail_url(self.ajo_user_regular.id))
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], self.ajo_user_regular.id)
-
+  
 
 class AjoUserViewSetIntegrationTestCase(TestCase):
     """

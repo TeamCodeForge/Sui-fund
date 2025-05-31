@@ -215,7 +215,7 @@ LOGGING = {
             'level': os.environ['LOGGING_LEVEL'],
             'propagate': True
         },
-        'chat': {
+        'ajo': {
             'handlers': ['stream'],
             'level': os.environ['LOGGING_LEVEL'],
             'propagate': True
@@ -289,7 +289,7 @@ SPECTACULAR_SETTINGS = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=3),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,

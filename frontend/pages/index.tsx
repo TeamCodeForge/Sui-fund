@@ -8,6 +8,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import { storeTokens, isAuthenticated } from "../utils/auth";
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import SocialAuth from "./components/socialauth";
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -110,56 +111,38 @@ export default function SignIn() {
 
       {/* Left side with form */}
       <div className="w-full md:w-1/2 flex items-center justify-center py-6 px-5">
-        <div className="w-full max-w-md">
-          <h2 className="text-2xl md:text-3xl font-bold mb-1 flex justify-center">Sign In to Sui-Fund</h2>
+      <div className="w-full max-w-md">
+        <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-gray-800">
+          Sign In to Sui-Fund
+        </h2>
+        
+        <div className="w-full flex flex-col items-center justify-center space-y-6">
+          {/* Google Sign In Button */}
+          <SocialAuth />
           
-          <div className="w-full h-full flex flex-col justify-center mt-6">
-            <form onSubmit={handleSignIn} className="mb-6 flex flex-col">
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2 font-medium">Email</label>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-700"
-                placeholder="example@gmail.com"
-                required
-              />
+          {/* Alternative Sign In Options */}
+          <div className="w-full max-w-sm">
+            <div className="relative flex items-center justify-center mb-6">
+              <div className="border-t border-gray-300 w-full"></div>
+              <div className="bg-white px-4 text-sm text-gray-500">or</div>
+              <div className="border-t border-gray-300 w-full"></div>
             </div>
             
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2 font-medium">Password</label>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-md text-gray-700"
-                placeholder="atleast 8 characters"
-                required
-              />
+            <div className="text-center">
+              <p className="text-gray-600 text-sm">
+                Don't have an account?{' '}
+                <a 
+                  href="/onboarding" 
+                  className="text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                >
+                  Sign Up
+                </a>
+              </p>
             </div>
-
-            <div className="mb-6">
-              <a href="#" className="text-blue-500 hover:text-blue-700 transition-colors">Forgot your password?</a>
-            </div>
-            
-            <button 
-              type="submit"
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-md transition-colors shadow-sm font-medium"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-          
-          <div className="text-center">
-            <p className="text-gray-700">
-              Don't have an account? <a href="/onboarding" className="text-blue-500 hover:text-blue-700 font-medium">Sign Up</a>
-            </p>
-          </div>
           </div>
         </div>
       </div>
+    </div>
 
       {/* Right side with background image and logo - hidden on mobile */}
       <div className="hidden md:flex md:w-1/2 bg-blue-600 flex-col justify-center items-center relative">

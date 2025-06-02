@@ -1,0 +1,42 @@
+export SECRET_KEY=''
+
+export CELERY_BROKER_URL='redis://localhost:6379/0'
+export LOGGING_LEVEL='DEBUG'
+
+
+
+export DATABASE_USER='ajo'
+export DATABASE_PASSWORD='ajo'
+export DATABASE_OWNER_PASSWORD=''
+export DATABASE_HOST='localhost'
+export DATABASE_PORT=6024
+export DATABASE_NAME='ajo'
+
+
+
+
+export FRONTEND_HOME='http://localhost:3001'
+
+export MEDIA_HOME='https://www.vandies.com'
+
+export ADMIN_EMAIL=''
+
+export EMAIL_HOST_USER=''
+export EMAIL_HOST_PASSWORD=''
+export EMAIL_HOST='localhost'
+export EMAIL_PORT=25
+export EMAIL_DEFAULT_SENDER='Ajo App '
+export EMAIL_USE_SSL=0
+
+export AWS_ACCESS_KEY_ID=''
+export AWS_SECRET_ACCESS_KEY=''
+
+export DEBUG=1
+export USE_AWS=0
+
+
+export GOOGLE_CLIENT_ID=''
+export GOOGLE_OAUTH2_SECRET=''
+export GOOGLE_OAUTH2_KEY=''
+
+

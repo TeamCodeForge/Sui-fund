@@ -1,0 +1,596 @@
+openapi: 3.0.3
+info:
+  title: Ajo App Project API
+  version: 1.0.0
+  description: Your project description
+paths:
+  /auth/admin/token/:
+    post:
+      operationId: admin_token_create
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminTokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminTokenObtainPair'
+          description: ''
+  /auth/admin/user/:
+    get:
+      operationId: admin_user_list
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminUser'
+          description: ''
+    post:
+      operationId: admin_user_create
+      tags:
+      - admin
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /auth/admin/user/{id}/:
+    get:
+      operationId: admin_user_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+    put:
+      operationId: admin_user_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+    delete:
+      operationId: admin_user_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /auth/admin/user/{id}/add-permission/:
+    post:
+      operationId: admin_user_add_permission_create
+      description: |-
+        Add a list of permissions to a specific user if they exist in Permission model
+        Expects JSON payload: {"permissions": ["permission_name1", "permission_name2"]}
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /auth/admin/user/{id}/remove-permission/:
+    post:
+      operationId: admin_user_remove_permission_create
+      description: |-
+        Remove a list of permissions from a specific user if they exist in Permission model
+        Expects JSON payload: {"permissions": ["permission_name1", "permission_name2"]}
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /auth/admin/user/{id}/set-password/:
+    post:
+      operationId: admin_user_set_password_create
+      description: |-
+        Set a new password for a specific user.
+        Expects JSON payload: {"password": "new_password"}
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /auth/admin/user/users/:
+    get:
+      operationId: admin_user_users_retrieve
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUser'
+          description: ''
+  /auth/confirm/:
+    get:
+      operationId: confirm_retrieve
+      tags:
+      - confirm
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /auth/confirm/resend/:
+    post:
+      operationId: confirm_resend_create
+      tags:
+      - confirm
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /auth/password/reset/:
+    post:
+      operationId: password_reset_create
+      tags:
+      - password
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          description: No response body
+  /auth/password/reset/new/:
+    post:
+      operationId: password_reset_new_create
+      tags:
+      - password
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /auth/perms/:
+    get:
+      operationId: perms_retrieve
+      tags:
+      - perms
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /auth/refreshToken/:
+    post:
+      operationId: refreshToken_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /auth/register/:
+    post:
+      operationId: register_create
+      tags:
+      - register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Registration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Registration'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+          description: ''
+  /auth/token/:
+    post:
+      operationId: token_create
+      tags:
+      - token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientTokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientTokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientTokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientTokenObtainPair'
+          description: ''
+  /auth/user/:
+    get:
+      operationId: user_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - user
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+components:
+  schemas:
+    AccountEnum:
+      enum:
+      - customer
+      - staff
+      type: string
+      description: |-
+        * `customer` - customer
+        * `staff` - staff
+    AdminTokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        image:
+          type: string
+          format: uri
+        account:
+          $ref: '#/components/schemas/AccountEnum'
+        username:
+          type: string
+          maxLength: 100
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        confirmed:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+          default: []
+      required:
+      - date_joined
+      - email
+      - first_name
+      - id
+      - last_name
+      - username
+    ClientTokenObtainPair:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - email
+      - password
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    Registration:
+      type: object
+      properties:
+        password:
+          type: string
+          maxLength: 50
+        username:
+          type: string
+          maxLength: 50
+        first_name:
+          type: string
+          maxLength: 50
+        last_name:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          maxLength: 50
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 100
+        image_url:
+          type: string
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        admin:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 100
+        last_name:
+          type: string
+          maxLength: 100
+        confirmed:
+          type: boolean
+        permissions:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+      required:
+      - admin
+      - email
+      - first_name
+      - id
+      - image_url
+      - last_name
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

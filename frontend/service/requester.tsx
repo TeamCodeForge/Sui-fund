@@ -43,6 +43,9 @@ interface DateFormatOptions {
     SIGNIN = "/auth/signin/",
     CONFIRM = "/auth/confirm/",
   }
+
+
+  export {ResponseType};
   
   // Date formatting functions
   export function formatLongDate(date: Date): string {

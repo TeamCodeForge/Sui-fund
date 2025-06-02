@@ -44,6 +44,10 @@ class AjoUserViewSet(viewsets.ModelViewSet):
         """
         Set the user to the current authenticated user if not specified.
         """
+        
+        if hasattr(self.request.user, 'ajo'):
+            return
+        
         if not serializer.validated_data.get('user'):
             serializer.save(user=self.request.user)
         else:

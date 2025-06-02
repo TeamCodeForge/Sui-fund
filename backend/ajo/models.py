@@ -3,8 +3,8 @@ from main.models import User
 
 # Create your models here.
 class AjoUser(models.Model):
-    user = models.ForeignKey(
-        User,
+    user = models.OneToOneField(
+        User, 
         related_name = 'ajo',
         on_delete = models.CASCADE
     )

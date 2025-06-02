@@ -6,6 +6,7 @@ import { isAuthenticated, clearTokens } from '../utils/auth';
 import { get } from 'http';
 import { createSavingsGroupQuick } from './tools/suichain';
 import { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
+import makeRequest, { ResponseType } from '@/service/requester'; // Import your makeRequest function
  
 const keypair = new Ed25519Keypair();
 
@@ -50,8 +51,8 @@ export default function CreatePool() {
             router.push('/');
             return;
         }
-getAjoUsers();
-//getAjoUser();
+        getAjoUsers();
+        //getAjoUser();
     }, [router]);
 
     const handleLogout = () => {
@@ -63,69 +64,82 @@ getAjoUsers();
 
     async function getAjoUsers() {
         try {
-            const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-            
-            const response = await fetch('http://192.168.103.194:8000/ajoajo-users/', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
+            const response = await makeRequest(
+                process.env.NEXT_PUBLIC_URL + '/ajoajo-users/',
+                {
+                    method: 'GET',
                 },
-            });
+                true // signed request
+            );
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Failed to fetch ajo users:', errorText);
-                return;
-            }
-            
-            const data = await response.json();
-            console.log('Ajo users fetched successfully:', data);
-            
-            // Ensure data is an array before setting state
-            if (Array.isArray(data)) {
-                setAjoUsers(data);
-            } else if (data && Array.isArray(data.results)) {
-                // Handle pagination response format
-                setAjoUsers(data.results);
-            } else {
-                console.error('Response data is not an array:', data);
+            if (response.type === ResponseType.SUCCESS) {
+                console.log('Ajo users fetched successfully:', response.payload);
+                
+                // Ensure data is an array before setting state
+                if (Array.isArray(response.payload)) {
+                    setAjoUsers(response.payload);
+                } else if (response.payload && Array.isArray(response.payload.results)) {
+                    // Handle pagination response format
+                    setAjoUsers(response.payload.results);
+                } else {
+                    console.error('Response data is not an array:', response.payload);
+                    setAjoUsers([]);
+                }
+            } else if (response.type === ResponseType.REDIRECT) {
+                console.log('Redirect required:', response.link);
+                if (response.link) {
+                    router.push(response.link);
+                }
+            } else if (response.type === ResponseType.KNOWN_ERROR) {
+                console.error('Known error fetching ajo users:', response.message);
                 setAjoUsers([]);
+            } else if (response.type === ResponseType.EXPIRED) {
+                console.log('Session expired, redirecting to signin');
+                if (response.link) {
+                    router.push(response.link);
+                }
             }
         } catch (error) {
             console.error('Error fetching ajo users:', error);
             setAjoUsers([]); // Ensure it's always an array
             
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.error('CORS error - backend needs to allow cross-origin requests');
+            if (error instanceof Error && error.message.includes('Network error')) {
+                console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
         }
     }
 
     async function getAjoUser() {
         try {
-            const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-            
-            const response = await fetch('http://192.168.103.194:8000/ajoajo-users/1/', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
+            const response = await makeRequest(
+                process.env.NEXT_PUBLIC_URL + '/ajoajo-users/1/',
+                {
+                    method: 'GET',
                 },
-            });
+                true // signed request
+            );
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Failed to fetch ajo users:', errorText);
-                return;
+            if (response.type === ResponseType.SUCCESS) {
+                console.log('Ajo user fetched successfully:', response.payload);
+                setAjoUser(response.payload);
+            } else if (response.type === ResponseType.REDIRECT) {
+                console.log('Redirect required:', response.link);
+                if (response.link) {
+                    router.push(response.link);
+                }
+            } else if (response.type === ResponseType.KNOWN_ERROR) {
+                console.error('Known error fetching ajo user:', response.message);
+            } else if (response.type === ResponseType.EXPIRED) {
+                console.log('Session expired, redirecting to signin');
+                if (response.link) {
+                    router.push(response.link);
+                }
             }
-            
-            const data = await response.json();
-            console.log('Ajo users fetched successfully:', data);
-            
-            setAjoUser(data);
         } catch (error) {
-            console.error('Error fetching ajo users:', error);
-            setAjoUsers([]); // Ensure it's always an array
+            console.error('Error fetching ajo user:', error);
             
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.error('CORS error - backend needs to allow cross-origin requests');
+            if (error instanceof Error && error.message.includes('Network error')) {
+                console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
         }
     }

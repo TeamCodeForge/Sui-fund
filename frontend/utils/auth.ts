@@ -9,15 +9,15 @@ interface TokenResponse {
  */
 export const storeTokens = (data: TokenResponse): void => {
   if (data.token) {
-    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('token', data.token);
   }
   
   if (data.access) {
-    localStorage.setItem('accessToken', data.access);
+    localStorage.setItem('token', data.access);
   }
   
   if (data.refresh) {
-    localStorage.setItem('refreshToken', data.refresh);
+    localStorage.setItem('refresh', data.refresh);
   }
 };
 
@@ -25,23 +25,23 @@ export const storeTokens = (data: TokenResponse): void => {
  * Retrieves the authentication token
  */
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken') || localStorage.getItem('accessToken');
+  return localStorage.getItem('token') || localStorage.getItem('token');
 };
 
 /**
  * Retrieves the refresh token
  */
 export const getRefreshToken = (): string | null => {
-  return localStorage.getItem('refreshToken');
+  return localStorage.getItem('refresh');
 };
 
 /**
  * Clears all authentication tokens
  */
 export const clearTokens = (): void => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('token');
+  localStorage.removeItem('token');
+  localStorage.removeItem('refresh');
 };
 
 /**

@@ -91,7 +91,7 @@ export default function VerifyPage() {
           // 7. Show success and redirect
           toast.info(<div className="toast-msg">{"Login successful"}</div>);
 
-          const redirectPath: string = (router.query.next as string) || "/";
+          const redirectPath: string = (router.query.next as string) || "/home";
           router.push(redirectPath);
         } catch (error: unknown) {
           console.error(error);

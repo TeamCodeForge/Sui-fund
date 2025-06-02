@@ -4,6 +4,8 @@ import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { toast } from 'react-toastify';
 import { isAuthenticated, clearTokens } from '../../utils/auth';
 import { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
+import makeRequest from '@/service/requester'; // Import your makeRequest function
+import { ResponseType } from '@/service/requester';
  
 const keypair = new Ed25519Keypair();
 
@@ -14,61 +16,76 @@ export default function Home() {
 
     const getAjoUsers = useCallback(async () => {
         try {
-            const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-            
-            const response = await fetch('http://192.168.103.194:8000/ajoajo-users/', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
+            const response = await makeRequest(
+                process.env.NEXT_PUBLIC_URL + '/ajoajo-users/',
+                {
+                    method: 'GET',
                 },
-            });
+                true // signed request
+            );
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Failed to get ajo users:', errorText);
-                return;
+            if (response.type === ResponseType.SUCCESS) {
+                console.log('Ajo users fetched successfully:', response.payload);
+            } else if (response.type === ResponseType.REDIRECT) {
+                console.log('Redirect required:', response.link);
+                if (response.link) {
+                    router.push(response.link);
+                }
+            } else if (response.type === ResponseType.KNOWN_ERROR) {
+                console.error('Known error getting ajo users:', response.message);
+            } else if (response.type === ResponseType.EXPIRED) {
+                console.log('Session expired, redirecting to signin');
+                if (response.link) {
+                    router.push(response.link);
+                }
             }
-            
-            const data = await response.json();
-            console.log('Ajo users fetched successfully:', data);
         } catch (error) {
             console.error('Error getting ajo users:', error);
             
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.error('CORS error - backend needs to allow cross-origin requests');
+            if (error instanceof Error && error.message.includes('Network error')) {
+                console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
         }
-    }, []);
+    }, [router]);
 
     const updateWalletAddress = useCallback(async () => {
         console.log('called update wallet address');
         try {
-            const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
-            
-            const response = await fetch('http://192.168.103.194:8000/ajoajo-users/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+            const response = await makeRequest(
+                process.env.NEXT_PUBLIC_URL + '/ajoajo-users/',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 'wallet_address': keypair.getSecretKey() })
                 },
-                body: JSON.stringify({ 'wallet_address': keypair.getSecretKey() })
-            });
+                true // signed request
+            );
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Failed to update wallet address:', errorText);
-                return;
+            if (response.type === ResponseType.SUCCESS) {
+                console.log('Wallet address updated successfully:', response.payload);
+            } else if (response.type === ResponseType.REDIRECT) {
+                console.log('Redirect required:', response.link);
+                if (response.link) {
+                    router.push(response.link);
+                }
+            } else if (response.type === ResponseType.KNOWN_ERROR) {
+                console.error('Known error updating wallet address:', response.message);
+            } else if (response.type === ResponseType.EXPIRED) {
+                console.log('Session expired, redirecting to signin');
+                if (response.link) {
+                    router.push(response.link);
+                }
             }
-            
-            const data = await response.json();
-            console.log('Wallet address updated successfully:', data);
         } catch (error) {
             console.error('Error updating wallet address:', error);
             
-            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-                console.error('CORS error - backend needs to allow cross-origin requests');
+            if (error instanceof Error && error.message.includes('Network error')) {
+                console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
         }
-    }, []);
+    }, [router]);
 
     useEffect(() => {
         console.log('called use effect in home');
@@ -128,7 +145,7 @@ export default function Home() {
                                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
                                 </svg>
                             </div>
-                            <span>Your Ajo groups</span>
+                            <span>Your groups</span>
                         </button>
                         
                         <div className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer">

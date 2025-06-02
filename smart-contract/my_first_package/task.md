@@ -1,0 +1,2 @@
+- call the smart contract with the given data and expect it to continously run
+- sui coin for the ajo

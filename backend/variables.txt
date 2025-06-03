@@ -1,42 +1,46 @@
-export SECRET_KEY=''
+SECRET_KEY='bbc85702cf0dad07a28dea171721f3dcf8ef3cd880b986653e82796bc0621fddeec3e8a2350b7f16d2325fa4afe33fb10d738b46891bfda04e82bd463abcf4711edad52b89ec223c7331dd685cca56ee6da9f668f923fdb32ad2942be7977ad68677ae16ac9911b8678781146aece134349c5dcfb7ca64d05864cbfbe3'
 
-export CELERY_BROKER_URL='redis://localhost:6379/0'
-export LOGGING_LEVEL='DEBUG'
-
-
-
-export DATABASE_USER='ajo'
-export DATABASE_PASSWORD='ajo'
-export DATABASE_OWNER_PASSWORD=''
-export DATABASE_HOST='localhost'
-export DATABASE_PORT=6024
-export DATABASE_NAME='ajo'
+CELERY_BROKER_URL='redis://redis:6379/0'
+LOGGING_LEVEL='ERROR'
 
 
 
+POSTGRES_USER='suifunds'
+POSTGRES_PASSWORD='suifunds'
+POSTGRES_DB='suifunds'
 
-export FRONTEND_HOME='http://localhost:3001'
-
-export MEDIA_HOME='https://www.vandies.com'
-
-export ADMIN_EMAIL=''
-
-export EMAIL_HOST_USER=''
-export EMAIL_HOST_PASSWORD=''
-export EMAIL_HOST='localhost'
-export EMAIL_PORT=25
-export EMAIL_DEFAULT_SENDER='Ajo App '
-export EMAIL_USE_SSL=0
-
-export AWS_ACCESS_KEY_ID=''
-export AWS_SECRET_ACCESS_KEY=''
-
-export DEBUG=1
-export USE_AWS=0
+DATABASE_USER='suifunds'
+DATABASE_PASSWORD='suifunds'
+DATABASE_HOST='postgres'
+DATABASE_PORT=6024
+DATABASE_NAME='suifunds'
 
 
-export GOOGLE_CLIENT_ID=''
-export GOOGLE_OAUTH2_SECRET=''
-export GOOGLE_OAUTH2_KEY=''
+
+
+FRONTEND_HOME='https://sui-funds.onrender.com'
+
+MEDIA_HOME='https://suifunds.yuviewenergy.com'
+
+ADMIN_EMAIL=''
+
+EMAIL_HOST_USER=''
+EMAIL_HOST_PASSWORD=''
+EMAIL_HOST='localhost'
+EMAIL_PORT=25
+EMAIL_DEFAULT_SENDER='Sui Funds <admin@bitcoverse.com>'
+EMAIL_USE_SSL=0
+
+AWS_ACCESS_KEY_ID=''
+AWS_SECRET_ACCESS_KEY=''
+
+DEBUG=1
+USE_AWS=0
+
+
+
+GOOGLE_CLIENT_ID='1001555477898-b2of27f1vdovqao3oc421apk4ulanjol.apps.googleusercontent.com'
+GOOGLE_OAUTH2_SECRET='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'
+GOOGLE_OAUTH2_KEY='1001555477898-b2of27f1vdovqao3oc421apk4ulanjol.apps.googleusercontent.com'
 
 

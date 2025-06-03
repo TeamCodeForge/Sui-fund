@@ -40,7 +40,7 @@ USE_AWS=0
 
 
 GOOGLE_CLIENT_ID='1001555477898-b2of27f1vdovqao3oc421apk4ulanjol.apps.googleusercontent.com'
-GOOGLE_OAUTH2_SECRET='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'
+GOOGLE_OAUTH2_SECRET=''
 GOOGLE_OAUTH2_KEY='1001555477898-b2of27f1vdovqao3oc421apk4ulanjol.apps.googleusercontent.com'
 
 

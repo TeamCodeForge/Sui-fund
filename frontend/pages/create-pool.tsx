@@ -149,19 +149,28 @@ export default function CreatePool() {
 
     const handleCreatePool = async (e: React.FormEvent) => {
         e.preventDefault();
-
         setIsLoading(true);
-
+    
         const participants = ajoUsers.map((_user, index) => ({
             wallet: _user.wallet_address,
             position: index + 1
         }));
-        
-
-        createSavingsGroupQuick(groupName, parseInt(frequency), parseInt(startDate), parseFloat(contributionAmount), participants, user.wallet_address, 'testnet').then(response => {
+    
+        try {
+            // Wait for createSavingsGroupQuick to complete
+            const response = await createSavingsGroupQuick(
+                groupName, 
+                parseInt(frequency), 
+                parseInt(startDate), 
+                parseFloat(contributionAmount), 
+                participants, 
+                user.wallet_address, 
+                'testnet'
+            );
+            
             console.log(response);
             
-            let payload = {
+            const payload = {
                 'address_link': response.groupId,
                 'name': groupName,
                 'digest': response.digest,
@@ -169,30 +178,33 @@ export default function CreatePool() {
                 'cycle_duration_days': frequency,
                 'contribution_amount': contributionAmount,
                 'start_cycle': startDate,
-                'participant_ids':  ajoUsers.map(user => user.user.id),
+                'participant_ids': ajoUsers.map(user => user.user.id),
                 'active': true
-            }
-
+            };
+    
             console.log(payload);
-
-            makeRequest(process.env.NEXT_PUBLIC_URL + '/ajosavingsgroup/', {
+    
+            // Wait for the backend request to complete
+            const backendResponse = await makeRequest(process.env.NEXT_PUBLIC_URL + '/ajosavingsgroup/', {
                 'method': 'POST',
                 'headers': {'Content-Type': 'application/json'},
                 'body': JSON.stringify(payload),
-            }).then(response => {
-                if(response.type === ResponseType.SUCCESS){
-                    setShowSuccessModal(true);
-                }
-            }).then(() => {
-                setIsLoading(false);
-            })
-
-            // make request to the create savings group endpoint to update this data there.
-            
-        })
-        
+            });
+    
+            if (backendResponse.type === ResponseType.SUCCESS) {
+                setShowSuccessModal(true);
+            }
+    
+        } catch (error) {
+            console.error('Error creating savings group:', error);
+            toast.error('NO Coin available for transaction');
+        } finally {
+            // This will always run, whether success or error
+            setIsLoading(false);
+        }
     };
 
+    
     const handleInviteMembers = () => {
         setShowSuccessModal(false);
         toast.success('Redirecting to invite members...');
@@ -374,7 +386,7 @@ export default function CreatePool() {
                             </div>
                             
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Start Payment after (cycle):</label>
                                 <input
                                     type="text"
                                     value={startDate}

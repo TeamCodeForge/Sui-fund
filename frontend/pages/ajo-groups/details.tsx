@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
+import { getCycleSummary } from '@/tools/suiutiles';
 import { isAuthenticated, clearTokens } from '../../utils/auth';
+import { SuiSavingsGroupClient } from '@/tools/suichain';
+import { UserContext } from '@/providers/UserProvider';
 
 interface Member {
     id: number;
@@ -30,13 +33,40 @@ export default function GroupDetails() {
     const router = useRouter();
     const { id } = router.query;
 
+    const userContext = useContext(UserContext);
+    // Now destructure from userContext with proper null checking
+    if (!userContext) {
+        throw new Error('Component must be used within a UserProvider');
+    }
+
+    const [user, setUser] = userContext;
+
+    const packageId = process.env.NEXT_PUBLIC_MOVE_PACKAGE_ID;
+    if (!packageId) {
+        throw new Error('NEXT_PUBLIC_MOVE_PACKAGE_ID environment variable is required');
+    }
+
+    const client = new SuiSavingsGroupClient({
+        packageId: packageId,
+        network: 'testnet'
+    })
+
     useEffect(() => {
         if (!isAuthenticated()) {
             router.push('/');
             return;
         }
-        if (id) {
-            fetchGroupDetails(id as string);
+        if (router.isReady) {
+            if (id) {
+                fetchGroupDetails(id as string);
+                
+                const link = router.query.link;
+                if (link && typeof link === 'string') {
+                    getCycleSummary(link).then(response => {
+                        console.log(response);
+                    });
+                }
+            }
         }
     }, [router, id]);
 
@@ -231,9 +261,9 @@ export default function GroupDetails() {
                         <div className="flex items-center gap-2 mb-4">
                             <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
                             <svg
-                            onClick={() => {
-                                window.open(`https://suiscan.xyz/testnet/tx/${router.query.digest}`)
-                            }}
+                                onClick={() => {
+                                    window.open(`https://suiscan.xyz/testnet/tx/${router.query.digest}`)
+                                }}
                                 className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer transition-colors"
                                 fill="none"
                                 stroke="currentColor"
@@ -258,6 +288,43 @@ export default function GroupDetails() {
                             <div><strong>Current Recipient:</strong> {group.currentRecipient}</div>
                             <div><strong>Founder:</strong> {group.founder}</div>
                         </div>
+
+                        <div className='flex justify-between my-4'>
+    <button
+        className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group"
+        onClick={() => {
+            const link = Array.isArray(router.query.link) 
+                ? router.query.link[0] 
+                : router.query.link;
+            
+            if (link) {
+                client.contribute(link, 0.02, user.wallet_address).then(response => {
+                    console.log(response);
+                });
+            }
+        }}
+    >
+        💰 Contribute
+    </button>
+    
+    <button
+        className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-purple-400/20 backdrop-blur-sm overflow-hidden group"
+        onClick={() => {
+            const link = Array.isArray(router.query.link) 
+                ? router.query.link[0] 
+                : router.query.link;
+            
+            if (link) {
+                client.startNewCycle(link, user.wallet_address).then(response => {
+                    console.log(response);
+                });
+            }
+        }}
+    >
+        🔄 Start New Cycle
+    </button>
+</div>
+
                     </div>
 
                     {/* Members Section */}

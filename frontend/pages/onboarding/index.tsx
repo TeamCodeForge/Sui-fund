@@ -147,25 +147,7 @@ export default function Onboarding() {
     };
     
     // If registration is complete, show wallet connection screen
-    if (registrationComplete) {
-        return (
-            <div className="h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-                <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-                    <img src="/suiflow.png" className="w-16 h-16 mx-auto mb-4" alt="Sui-Fund Logo" />
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Connect Your Wallet</h2>
-                    <p className="text-gray-600 mb-8">
-                        To complete your registration and access all features, please connect your Sui wallet.
-                    </p>
-                    <div className="flex justify-center mb-6">
-                        <ConnectButton />
-                    </div>
-                    <p className="text-sm text-gray-500">
-                        You'll be redirected to the home page once your wallet is connected.
-                    </p>
-                </div>
-            </div>
-        );
-    }
+   
     
     return (
         <div className='md:flex md:flex-row h-screen'>

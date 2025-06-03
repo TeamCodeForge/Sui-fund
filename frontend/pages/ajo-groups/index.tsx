@@ -201,7 +201,7 @@ export default function AjoGroups() {
                                             </div>
                                         </div>
                                         <button 
-                                            onClick={() => router.push(`/ajo-groups/details?digest=${group.digest}&id=${group.id}`)}
+                                            onClick={() => router.push(`/ajo-groups/details?digest=${group.digest}&id=${group.id}&link=${group.address_link}`)}
                                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
                                         >
                                             View Details

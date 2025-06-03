@@ -112,6 +112,7 @@ class SavingsGroupViewSetTestCase(APITestCase):
             'contribution_amount': '150.0000',
             'participant_ids': [user2.id, user3.id],
             'active': False,
+            'digest': 'lsijsalisjljiofse',
             'address_link': '0xewerererer'
         }
         

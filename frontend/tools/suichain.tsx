@@ -676,7 +676,7 @@ export function createAdminMultisig(
 
     // Get balance - SUI coin type is '0x2::sui::SUI'
     const balance = await client.getBalance({
-      owner: address, // Use the address directly, not derive from keypair
+      owner: Ed25519Keypair.fromSecretKey(address).getPublicKey().toSuiAddress(), // Use the address directly, not derive from keypair
       coinType: '0x2::sui::SUI'
     });
 

@@ -89,7 +89,7 @@ export default function VerifyPage() {
           window.localStorage.setItem("refresh", authData.refresh);
 
           // 7. Show success and redirect
-          toast.info(<div className="toast-msg">{"Login successful"}</div>);
+          //toast.info(<div className="toast-msg">{"Login successful"}</div>);
 
           const redirectPath: string = (router.query.next as string) || "/home";
           router.push(redirectPath);
@@ -112,7 +112,7 @@ export default function VerifyPage() {
             x: ["4rem", "-4rem", "4rem"],
             transition: transitionValues
           }}
-          className="w-[20px] h-[20px] rounded-full bg-primary-500"
+          className="w-[20px] h-[20px] rounded-full bg-blue-500"
         ></motion.div>
       </div>
     </>

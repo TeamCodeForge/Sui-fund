@@ -50,12 +50,11 @@ class AjoUserSerializer(serializers.ModelSerializer):
         
         return value.strip()
 
-
 class SavingsGroupSerializer(serializers.ModelSerializer):
     """
     Serializer for SavingsGroup model with nested participant information.
     """
-    participants = AjoUserSerializer(many=True, read_only=True)
+    participants = serializers.SerializerMethodField()  # Change to SerializerMethodField
     participants_count = serializers.SerializerMethodField()
     participant_ids = serializers.ListField(
         child=serializers.IntegerField(),
@@ -69,23 +68,25 @@ class SavingsGroupSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
+            'description',
             'cycle_duration_days',
             'start_cycle',
             'contribution_amount',
             'participants',
-            
             'participants_count',
             'participant_ids',
             'active',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
-    
+
+    def get_participants(self, obj):
+        # Get the ajo instances from the users
+        ajo_users = [user.ajo for user in obj.participants.all() if hasattr(user, 'ajo')]
+        return AjoUserSerializer(ajo_users, many=True, context=self.context).data
+
     def get_participants_count(self, obj):
-        """
-        Return the total number of participants in the group.
-        """
         return obj.participants.count()
-    
+       
     def validate_cycle_duration_days(self, value):
         """
         Validate that cycle duration is reasonable (between 1 and 365 days).

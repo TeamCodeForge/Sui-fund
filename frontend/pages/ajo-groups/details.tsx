@@ -5,12 +5,21 @@ import { getCycleSummary } from '@/tools/suiutiles';
 import { isAuthenticated, clearTokens } from '../../utils/auth';
 import { SuiSavingsGroupClient } from '@/tools/suichain';
 import { UserContext } from '@/providers/UserProvider';
+import makeRequest, { ResponseType } from '@/service/requester';
+import { desc } from 'framer-motion/client';
+
+import { ReactNode, ReactElement } from 'react';
+import BasicLayout from '@/layouts/BasicLayout';
+
 
 interface Member {
     id: number;
-    name: string;
-    title: string;
-    phone: string;
+    user: {
+        username: string;
+        title: string;
+        email: string;
+    };
+
     avatar: string;
 }
 
@@ -24,12 +33,25 @@ interface GroupDetails {
     nextPayout: string;
     currentRecipient: string;
     founder: string;
-    membersList: Member[];
+
 }
 
 export default function GroupDetails() {
     const [group, setGroup] = useState<GroupDetails | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [participants, setParticipants] = useState<Member[]>([])
+
+    const [groupname, setGroupName] = useState<string>('')
+    const [contributionAmount, setContributionAmount] = useState<number>(0.00)
+    const [description, setDescription] = useState("")
+    const [cycle_duration_days, setCycleDurationDays] = useState<number>(0)
+    const [totalContribution, setTotalContribution] = useState<number>(0)
+    const [expectedTotal, setExpectedTotal] = useState<number>(0);
+
+    const [allContributed, setAllContributed] = useState<Boolean>(false);
+    const [cycleCount, setCycleCount] = useState<number>(0);
+    const [startPayoutCycle, setStartPayoutCycle] = useState<number>(0)
+
     const router = useRouter();
     const { id } = router.query;
 
@@ -59,13 +81,33 @@ export default function GroupDetails() {
         if (router.isReady) {
             if (id) {
                 fetchGroupDetails(id as string);
-                
+
                 const link = router.query.link;
                 if (link && typeof link === 'string') {
                     getCycleSummary(link).then(response => {
                         console.log(response);
+                        setTotalContribution(response.contributionsReceived)
+                        setExpectedTotal(response.totalExpected / 1_000_000_000)
                     });
                 }
+
+
+
+
+                makeRequest(process.env.NEXT_PUBLIC_URL + `/ajosavingsgroup/${id}`).then(response => {
+                    if (response.type === ResponseType.SUCCESS) {
+                        console.log(response);
+                        setParticipants(response.payload['participants'])
+                        setGroupName(response.payload['name'])
+                        setDescription(response.payload['description'])
+                        setContributionAmount(parseFloat(response.payload['contribution_amount']))
+                        setCycleDurationDays(response.payload['cycle_duration_days'])
+                        setStartPayoutCycle(response.payload['start_cycle'])
+
+                    }
+                }).then(() => {
+                    setIsLoading(false);
+                })
             }
         }
     }, [router, id]);
@@ -83,36 +125,7 @@ export default function GroupDetails() {
                 nextPayout: '2025-06-31',
                 currentRecipient: 'Chike Obi',
                 founder: 'Nancy James',
-                membersList: [
-                    {
-                        id: 1,
-                        name: 'Nancy James',
-                        title: 'Creator',
-                        phone: '09011510100',
-                        avatar: '/avatars/nancy.jpg'
-                    },
-                    {
-                        id: 2,
-                        name: 'Peter Okonkwo',
-                        title: 'Creator',
-                        phone: '09011510100',
-                        avatar: '/avatars/peter.jpg'
-                    },
-                    {
-                        id: 3,
-                        name: 'Elliot Nkwocha',
-                        title: 'Member',
-                        phone: '09013456789',
-                        avatar: '/avatars/elliot.jpg'
-                    },
-                    {
-                        id: 4,
-                        name: 'Christine Vandel',
-                        title: 'Creator',
-                        phone: '09011510100',
-                        avatar: '/avatars/christine.jpg'
-                    }
-                ]
+
             };
 
             setGroup(mockGroup);
@@ -157,91 +170,16 @@ export default function GroupDetails() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-50">
-            {/* Sidebar */}
-            <div className="w-72 bg-white border-r border-gray-200">
-                <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center">
-                        <img src="/suiflow.png" className="w-8 h-8 mr-3" alt="Sui-Fund Logo" />
-                        <h1 className="text-xl font-bold text-gray-800">Sui-Fund</h1>
-                    </div>
-                </div>
-
-                <nav className="p-4 h-[90%] flex flex-col justify-between">
-                    <div className="space-y-1">
-                        <button
-                            onClick={() => router.push('/home')}
-                            className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer w-full"
-                        >
-                            <div className="w-5 h-5 mr-3">
-                                <svg fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                                </svg>
-                            </div>
-                            <span className="font-medium">Dashboard</span>
-                        </button>
-
-                        <button
-                            onClick={() => router.push('/ajo-groups')}
-                            className="flex items-center p-3 bg-blue-50 text-blue-600 rounded-lg w-full"
-                        >
-                            <div className="w-5 h-5 mr-3">
-                                <svg fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
-                                </svg>
-                            </div>
-                            <span className="font-medium">Your Ajo groups</span>
-                        </button>
-
-                        <button
-                            onClick={() => router.push('/notifications')}
-                            className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer w-full"
-                        >
-                            <div className="w-5 h-5 mr-3">
-                                <svg fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                            </div>
-                            <span>Notifications</span>
-                        </button>
-                    </div>
-
-                    <div className="mt-8 pt-4 border-t border-gray-200">
-                        <button
-                            onClick={() => router.push('/create-pool')}
-                            className="flex items-center w-full p-3 text-blue-600 hover:bg-blue-50 rounded-lg"
-                        >
-                            <div className="w-5 h-5 mr-3">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                            </div>
-                            <span className="font-medium">Create Pool</span>
-                        </button>
-
-                        <div
-                            onClick={handleLogout}
-                            className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer mt-1"
-                        >
-                            <div className="w-5 h-5 mr-3">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                            </div>
-                            <span>Log out</span>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-
+        <>
+           
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
                 {/* Header */}
                 <div className="bg-white border-b border-gray-200 px-8 py-4">
                     <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-blue-600">Your Ajo groups</h2>
+                        <h2 className="text-2xl font-bold text-blue-600">Your groups</h2>
                         <div className="flex items-center">
-                            <span className="text-gray-700 mr-3">GM GM, Elliot!</span>
+                            <span className="text-gray-700 mr-3">{user.user.username}!</span>
                             <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
                                 <span className="text-white font-medium text-sm">E</span>
                             </div>
@@ -259,7 +197,7 @@ export default function GroupDetails() {
                     {/* Group Header */}
                     <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2 mb-4">
-                            <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">{groupname}</h1>
                             <svg
                                 onClick={() => {
                                     window.open(`https://suiscan.xyz/testnet/tx/${router.query.digest}`)
@@ -280,50 +218,53 @@ export default function GroupDetails() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div><strong>Purpose:</strong> {group.purpose}</div>
-                            <div><strong>Contribution:</strong> ₦{group.contribution.toLocaleString()}</div>
-                            <div><strong>Frequency:</strong> {group.frequency}</div>
-                            <div><strong>Members:</strong> {group.members}</div>
-                            <div><strong>Next Payout:</strong> {group.nextPayout}</div>
+                            <div><strong>Purpose:</strong> {description}</div>
+                            <div><strong>Total Contribution (SUI):</strong> {totalContribution / 1_000_000_000}</div>
+                            <div><strong>Cycle Duration (days):</strong> {cycle_duration_days}</div>
+                            <div><strong>Members:</strong> {participants.length}</div>
+                            <div><strong>Contribution Amount (SUI):</strong> {contributionAmount}</div>
+                            <div><strong>Expected Total Amount (SUI):</strong> {expectedTotal}</div>
                             <div><strong>Current Recipient:</strong> {group.currentRecipient}</div>
-                            <div><strong>Founder:</strong> {group.founder}</div>
+
                         </div>
 
-                        <div className='flex justify-between my-4'>
-    <button
-        className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group"
-        onClick={() => {
-            const link = Array.isArray(router.query.link) 
-                ? router.query.link[0] 
-                : router.query.link;
-            
-            if (link) {
-                client.contribute(link, 0.02, user.wallet_address).then(response => {
-                    console.log(response);
-                });
-            }
-        }}
-    >
-        💰 Contribute
-    </button>
-    
-    <button
-        className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-purple-400/20 backdrop-blur-sm overflow-hidden group"
-        onClick={() => {
-            const link = Array.isArray(router.query.link) 
-                ? router.query.link[0] 
-                : router.query.link;
-            
-            if (link) {
-                client.startNewCycle(link, user.wallet_address).then(response => {
-                    console.log(response);
-                });
-            }
-        }}
-    >
-        🔄 Start New Cycle
-    </button>
-</div>
+                        <div className='flex flex-col md:flex-row justify-between my-4'>
+                            <button
+                                className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group"
+                                onClick={() => {
+                                    const link = Array.isArray(router.query.link)
+                                        ? router.query.link[0]
+                                        : router.query.link;
+
+                                    if (link) {
+                                        console.log(contributionAmount);
+                                        client.contribute(link, contributionAmount, user.wallet_address).then(response => {
+                                            console.log(response);
+                                            toast.info('Contribution Added')
+                                        });
+                                    }
+                                }}
+                            >
+                                💰 Contribute
+                            </button>
+
+                            <button
+                                className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-purple-400/20 backdrop-blur-sm overflow-hidden group"
+                                onClick={() => {
+                                    const link = Array.isArray(router.query.link)
+                                        ? router.query.link[0]
+                                        : router.query.link;
+
+                                    if (link) {
+                                        client.startNewCycle(link, user.wallet_address).then(response => {
+                                            console.log(response);
+                                        });
+                                    }
+                                }}
+                            >
+                                🔄 Start New Cycle
+                            </button>
+                        </div>
 
                     </div>
 
@@ -334,19 +275,19 @@ export default function GroupDetails() {
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {group.membersList.map((member) => (
+                            {participants.map((member) => (
                                 <div key={member.id} className="flex items-center bg-blue-500 text-white p-4 rounded-lg">
                                     <div className="w-16 h-16 bg-gray-300 rounded-full mr-4 overflow-hidden">
                                         <div className="w-full h-full bg-blue-400 flex items-center justify-center">
                                             <span className="text-white font-bold text-lg">
-                                                {member.name.split(' ').map(n => n[0]).join('')}
+                                                {member.user.username.split(' ').map(n => n[0]).join('')}
                                             </span>
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">Name: {member.name}</h3>
-                                        <p className="text-blue-100">Title: {member.title}</p>
-                                        <p className="text-blue-100">Phone: {member.phone}</p>
+                                        <h3 className="font-semibold text-lg">Name: {member.user.username}</h3>
+
+                                        <p className="text-blue-100">email: {member.user.email}</p>
                                     </div>
                                 </div>
                             ))}
@@ -354,6 +295,10 @@ export default function GroupDetails() {
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
+}
+
+GroupDetails.getLayout = function(page: ReactNode) : ReactElement{
+    return (<BasicLayout>{page}</BasicLayout>)
 }

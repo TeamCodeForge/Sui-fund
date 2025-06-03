@@ -1,0 +1,41 @@
+  
+services:
+
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg14
+    container_name: postgres
+    expose:
+      - 5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+      - ./db:/code/db
+    env_file:
+      - .env
+
+  redis:
+    image: redis
+    expose:
+      - 6379
+
+  web:
+    build: .
+    command: bash run.sh
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - .env
+
+    depends_on:
+      - redis
+      - postgres
+  
+
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s

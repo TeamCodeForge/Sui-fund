@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { toast } from 'react-toastify';
 import { isAuthenticated, clearTokens } from '../utils/auth';
 import { get } from 'http';
-import { createSavingsGroupQuick } from './tools/suichain';
-import { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
+import { createSavingsGroupQuick } from '@/tools/suichain';
 import makeRequest, { ResponseType } from '@/service/requester'; // Import your makeRequest function
+import { UserContext } from '@/providers/UserProvider';
  
-const keypair = new Ed25519Keypair();
 
-// method 1
-
-// method 2
-const address = keypair.getPublicKey().toSuiAddress();
 
 interface User {
     id: number;
@@ -37,7 +32,6 @@ export default function CreatePool() {
     const [frequency, setFrequency] = useState('');
     const [maxMembers, setMaxMembers] = useState('');
     const [startDate, setStartDate] = useState('');
-    const [walletAddress, setWalletAddress] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     
     const router = useRouter();
@@ -45,6 +39,15 @@ export default function CreatePool() {
     const [ajoUsers, setAjoUsers] = useState<AjoUser[]>([]);
     const [ajoUser, setAjoUser] = useState<AjoUser | null>(null);
     const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+    const userContext = useContext(UserContext);
+
+    if (!userContext) {
+        throw new Error('Component must be used within a UserProvider');
+    }
+
+    const [user, setUser] = userContext;
+
+
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -146,27 +149,48 @@ export default function CreatePool() {
 
     const handleCreatePool = async (e: React.FormEvent) => {
         e.preventDefault();
+
         setIsLoading(true);
+
+        const participants = ajoUsers.map((_user, index) => ({
+            wallet: _user.wallet_address,
+            position: index + 1
+        }));
         
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+
+        createSavingsGroupQuick(groupName, parseInt(frequency), parseInt(startDate), parseFloat(contributionAmount), participants, user.wallet_address, 'testnet').then(response => {
+            console.log(response);
             
-            // Reset form
-            setGroupName('');
-            setPurpose('');
-            setContributionAmount('');
-            setFrequency('');
-            setMaxMembers('');
-            setStartDate('');
-            setWalletAddress('');
+            let payload = {
+                'address_link': response.groupId,
+                'name': groupName,
+                'digest': response.digest,
+                'description': purpose,
+                'cycle_duration_days': frequency,
+                'contribution_amount': contributionAmount,
+                'start_cycle': startDate,
+                'participant_ids':  ajoUsers.map(user => user.user.id),
+                'active': true
+            }
+
+            console.log(payload);
+
+            makeRequest(process.env.NEXT_PUBLIC_URL + '/ajosavingsgroup/', {
+                'method': 'POST',
+                'headers': {'Content-Type': 'application/json'},
+                'body': JSON.stringify(payload),
+            }).then(response => {
+                if(response.type === ResponseType.SUCCESS){
+                    setShowSuccessModal(true);
+                }
+            }).then(() => {
+                setIsLoading(false);
+            })
+
+            // make request to the create savings group endpoint to update this data there.
             
-            setShowSuccessModal(true);
-        } catch (error) {
-            toast.error('Failed to create pool');
-        } finally {
-            setIsLoading(false);
-        }
+        })
+        
     };
 
     const handleInviteMembers = () => {
@@ -361,29 +385,11 @@ export default function CreatePool() {
                                 />
                             </div>
                             
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Wallet Address</label>
-                                <input
-                                    type="text"
-                                    value={walletAddress}
-                                    onChange={(e) => setWalletAddress(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md bg-white"
-                                    placeholder="Input Address..."
-                                    required
-                                />
-                            </div>
+ 
                             
                             <div className="flex justify-end pt-4">
                                 <button
-                                onClick={() => {
-                                    const participants = ajoUsers.map((user, index) => ({
-                                        wallet: user.wallet_address,
-                                        position: index + 1
-                                    }));
-                                    
-
-                                    createSavingsGroupQuick(groupName, 30, 150, 0.8, participants, keypair, 'testnet');
-                                }}
+                              
                                     type="submit"
                                     disabled={isLoading}
                                     className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-md font-medium disabled:opacity-50"

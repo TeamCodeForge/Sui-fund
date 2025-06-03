@@ -10,6 +10,7 @@ import { storeTokens, isAuthenticated } from "../utils/auth";
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import SocialAuth from "./components/socialauth";
 
+
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,11 +41,7 @@ export default function SignIn() {
   };
 
   useEffect(() => {
-    // Only redirect if user is already authenticated (regardless of wallet connection)
-    if (isAuthenticated()) {
-      router.push('/home');
-      return;
-    }
+   
   }, [router])
 
   const handleSignIn = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
@@ -53,7 +50,7 @@ export default function SignIn() {
     
     try {
       // Call the authentication API
-      const response = await fetch('http://192.168.103.194:8000/auth/token/', {
+      const response = await fetch(process.env.NEXT_PUBLIC_URL + '/auth/token/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,10 +66,11 @@ export default function SignIn() {
         const errorText = await response.text();
         try {
           const errorData = JSON.parse(errorText);
-          throw new Error(errorData.detail || 'Invalid email or password');
+          toast.error(errorData.detail || 'Invalid email or password');
         } catch (e) {
-          throw new Error('Failed to sign in');
+          toast.error('Failed to sign in');
         }
+        return;
       }
       
       const data = await response.json();
@@ -120,14 +118,58 @@ export default function SignIn() {
           {/* Google Sign In Button */}
           <SocialAuth />
           
-          {/* Alternative Sign In Options */}
+          {/* Divider */}
           <div className="w-full max-w-sm">
             <div className="relative flex items-center justify-center mb-6">
               <div className="border-t border-gray-300 w-full"></div>
               <div className="bg-white px-4 text-sm text-gray-500">or</div>
               <div className="border-t border-gray-300 w-full"></div>
             </div>
+          </div>
+
+          {/* Email and Password Login Form */}
+          <form onSubmit={handleSignIn} className="w-full max-w-sm space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your email"
+              />
+            </div>
             
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+          
+          {/* Sign Up Link */}
+          <div className="w-full max-w-sm">
             <div className="text-center">
               <p className="text-gray-600 text-sm">
                 Don't have an account?{' '}

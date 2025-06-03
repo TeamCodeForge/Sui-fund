@@ -4,10 +4,13 @@ from main.models import User
 from .models import AjoUser
 from rest_framework import serializers
 from .models import SavingsGroup
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 
 
-class UserSerializer(serializers.ModelSerializer):
+class AUserSerializer(serializers.ModelSerializer):
     """Serializer for the User model"""
     class Meta:
         model = User
@@ -17,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class AjoUserSerializer(serializers.ModelSerializer):
     """Serializer for the AjoUser model"""
-    user = UserSerializer(read_only=True)
+    user = AUserSerializer(read_only=True)
     #user_id = serializers.IntegerField(write_only=True, required=False)
     
     class Meta:
@@ -70,6 +73,7 @@ class SavingsGroupSerializer(serializers.ModelSerializer):
             'start_cycle',
             'contribution_amount',
             'participants',
+            
             'participants_count',
             'participant_ids',
             'active',
@@ -171,8 +175,10 @@ class SavingsGroupCreateSerializer(serializers.ModelSerializer):
             'cycle_duration_days',
             'start_cycle',
             'contribution_amount',
+            'description',
             'participant_ids',
-            'address_link'
+            'address_link',
+            'digest'
         ]
     
     def validate_cycle_duration_days(self, value):
@@ -189,8 +195,9 @@ class SavingsGroupCreateSerializer(serializers.ModelSerializer):
         participant_ids = validated_data.pop('participant_ids', [])
         savings_group = SavingsGroup.objects.create(**validated_data)
         
+        logger.debug(participant_ids)
         if participant_ids:
-            participants = AjoUser.objects.filter(id__in=participant_ids)
+            participants = User.objects.filter(id__in=participant_ids)
             savings_group.participants.set(participants.values_list('id', flat=True))
         
         return savings_group
@@ -210,8 +217,10 @@ class SavingsGroupListSerializer(serializers.ModelSerializer):
             'cycle_duration_days',
             'contribution_amount',
             'participants_count',
+            'description',
             'active',
-            'address_link'
+            'address_link',
+            'digest'
         ]
     
     def get_participants_count(self, obj):

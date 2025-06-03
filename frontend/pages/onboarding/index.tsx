@@ -16,14 +16,14 @@ export default function Onboarding() {
     const [showTermsModal, setShowTermsModal] = useState(false);
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const router = useRouter();
-    const account = useCurrentAccount();
+   
 
     // When wallet is connected after registration, redirect to home
     useEffect(() => {
-        if (registrationComplete && account) {
+        if (registrationComplete) {
             router.push('/home');
         }
-    }, [account, registrationComplete, router]);
+    }, [ registrationComplete, router]);
 
     const submit = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -39,7 +39,7 @@ export default function Onboarding() {
             console.log('Attempting to register user...');
             
             // Call the registration API
-            const response = await fetch('http://192.168.103.194:8000/auth/register/', {
+            const response = await fetch(process.env.NEXT_PUBLIC_URL + '/auth/register/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

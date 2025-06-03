@@ -84,7 +84,7 @@ export default function GroupDetails() {
                     }
                 ]
             };
-            
+
             setGroup(mockGroup);
         } catch (error) {
             console.error('Error fetching group details:', error);
@@ -115,7 +115,7 @@ export default function GroupDetails() {
             <div className="flex justify-center items-center h-screen">
                 <div className="text-center">
                     <h2 className="text-xl font-semibold text-gray-700">Group not found</h2>
-                    <button 
+                    <button
                         onClick={() => router.push('/ajo-groups')}
                         className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md"
                     >
@@ -136,10 +136,10 @@ export default function GroupDetails() {
                         <h1 className="text-xl font-bold text-gray-800">Sui-Fund</h1>
                     </div>
                 </div>
-                
+
                 <nav className="p-4 h-[90%] flex flex-col justify-between">
                     <div className="space-y-1">
-                        <button 
+                        <button
                             onClick={() => router.push('/home')}
                             className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer w-full"
                         >
@@ -150,8 +150,8 @@ export default function GroupDetails() {
                             </div>
                             <span className="font-medium">Dashboard</span>
                         </button>
-                        
-                        <button 
+
+                        <button
                             onClick={() => router.push('/ajo-groups')}
                             className="flex items-center p-3 bg-blue-50 text-blue-600 rounded-lg w-full"
                         >
@@ -162,8 +162,8 @@ export default function GroupDetails() {
                             </div>
                             <span className="font-medium">Your Ajo groups</span>
                         </button>
-                        
-                        <button 
+
+                        <button
                             onClick={() => router.push('/notifications')}
                             className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer w-full"
                         >
@@ -175,9 +175,9 @@ export default function GroupDetails() {
                             <span>Notifications</span>
                         </button>
                     </div>
-                    
+
                     <div className="mt-8 pt-4 border-t border-gray-200">
-                        <button 
+                        <button
                             onClick={() => router.push('/create-pool')}
                             className="flex items-center w-full p-3 text-blue-600 hover:bg-blue-50 rounded-lg"
                         >
@@ -188,8 +188,8 @@ export default function GroupDetails() {
                             </div>
                             <span className="font-medium">Create Pool</span>
                         </button>
-                        
-                        <div 
+
+                        <div
                             onClick={handleLogout}
                             className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer mt-1"
                         >
@@ -228,8 +228,27 @@ export default function GroupDetails() {
                 <div className="flex-1 p-8 bg-gray-50 overflow-y-auto">
                     {/* Group Header */}
                     <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-4">{group.name}</h1>
-                        
+                        <div className="flex items-center gap-2 mb-4">
+                            <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
+                            <svg
+                            onClick={() => {
+                                window.open(`https://suiscan.xyz/testnet/tx/${router.query.digest}`)
+                            }}
+                                className="w-5 h-5 text-gray-600 hover:text-blue-600 cursor-pointer transition-colors"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
+                            </svg>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div><strong>Purpose:</strong> {group.purpose}</div>
                             <div><strong>Contribution:</strong> ₦{group.contribution.toLocaleString()}</div>
@@ -246,7 +265,7 @@ export default function GroupDetails() {
                         <h2 className="text-xl font-bold text-gray-900 mb-6 border-b-2 border-blue-500 pb-2 inline-block">
                             Members Details
                         </h2>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {group.membersList.map((member) => (
                                 <div key={member.id} className="flex items-center bg-blue-500 text-white p-4 rounded-lg">

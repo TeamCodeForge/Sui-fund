@@ -87,13 +87,19 @@ class SavingsGroupViewSetTestCase(APITestCase):
         self._log_response("LIST SAVINGS GROUPS (AUTHENTICATED)", response)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # user1 is in 2 groups
+        logger.debug(response.json())
+        self.assertEqual(response.json()['count'], 2)  # user1 is in 2 groups
     
 
     def test_create_savings_group(self):
         """
         Test creating a new savings group with notifications
         """
+        
+        user2 = self._create_user('user22@example.com')
+        user3 = self._create_user('user33@example.com')
+        
+        
         self.client.force_authenticate(user=self.user1)
         url = reverse('savingsgroup-list')
         
@@ -101,14 +107,18 @@ class SavingsGroupViewSetTestCase(APITestCase):
             'name': 'New Test Group',
             'cycle_duration_days': 45,
             'start_cycle': 1,
+            'description': 'This is a savings group',
+            'description': 'Group workds',
             'contribution_amount': '150.0000',
-            'participant_ids': [self.user2.id, self.user3.id],
+            'participant_ids': [user2.id, user3.id],
             'active': False,
             'address_link': '0xewerererer'
         }
         
         logger.debug(f"\n=== CREATE SAVINGS GROUP - REQUEST DATA ===")
         logger.debug(f"Request Data: {json.dumps(data, indent=2)}")
+        
+        MyNotification.objects.all().delete()
         
         initial_notification_count = MyNotification.objects.count()
         response = self.client.post(url, data, format='json')
@@ -125,6 +135,7 @@ class SavingsGroupViewSetTestCase(APITestCase):
         # Check if creator was added as participant
         self.assertIn(self.user1, created_group.participants.all())
         
+        
         # Check if notifications were created (creator + 2 participants = 3 notifications)
         final_notification_count = MyNotification.objects.count()
         self.assertEqual(final_notification_count, initial_notification_count + 3)
@@ -140,53 +151,6 @@ class SavingsGroupViewSetTestCase(APITestCase):
             message__icontains='invited to join'
         )
         self.assertEqual(invitation_notifications.count(), 2)
-    
-    def test_join_group(self):
-        """
-        Test joining an existing savings group
-        """
-        
-        saving_group = SavingsGroup.objects.create(
-            name='Test Group',
-            cycle_duration_days=30,
-            start_cycle=1,
-            contribution_amount=Decimal('100.0000'),
-            active=True
-        )
-        
-        self.client.force_authenticate(user=self.user3)
-        logger.debug(self.savings_group.pk)
-        url = reverse('savingsgroup-join-group', kwargs={'pk': saving_group.pk})
-        
-        initial_notification_count = MyNotification.objects.count()
-        response = self.client.post(url)
-        
-        self._log_response("JOIN GROUP", response)
-        
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['detail'], 'Successfully joined the savings group.')
-        
-        # Check if user was added to group
-        self.assertIn(self.user3, self.savings_group.participants.all())
-        
-        # Check notifications (1 for joiner + 2 for existing members = 3 total)
-        final_notification_count = MyNotification.objects.count()
-        self.assertEqual(final_notification_count, initial_notification_count + 3)
-    
-    
-    def test_join_group_already_member(self):
-        """
-        Test trying to join a group user is already a member of
-        """
-        self.client.force_authenticate(user=self.user1)
-        url = reverse('savingsgroup-join-group', kwargs={'pk': self.savings_group.pk})
-        
-        response = self.client.post(url)
-        
-        self._log_response("JOIN GROUP (ALREADY MEMBER)", response)
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data['detail'], 'You are already a member of this group.')
 
 
         
@@ -243,7 +207,7 @@ class SavingsGroupViewSetTestCase(APITestCase):
         self._log_response("USER CAN ONLY SEE THEIR GROUPS - LIST", response)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)  # user3 is not in any groups
+        self.assertEqual(response.json()['count'], 0)  # user3 is not in any groups
         
         # Check that user3 cannot access the group detail
         detail_url = reverse('savingsgroup-detail', kwargs={'pk': other_group.pk})

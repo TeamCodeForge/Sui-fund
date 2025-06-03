@@ -47,6 +47,8 @@ class SavingsGroupViewSet(viewsets.ModelViewSet):
         Automatically add the creator as a participant when creating a group
         and send notifications to all participants.
         """
+        
+        
         savings_group = serializer.save()
         savings_group.participants.add(self.request.user)
         
@@ -60,6 +62,7 @@ class SavingsGroupViewSet(viewsets.ModelViewSet):
         creator = self.request.user
         participants = savings_group.participants.all()
         
+        logger.debug(participants)
         notifications = []
         for participant in participants:
             if participant == creator:
@@ -191,7 +194,7 @@ class SavingsGroupViewSet(viewsets.ModelViewSet):
         Get list of all participants in a savings group.
         """
         savings_group = self.get_object()
-        participants = savings_group.participants.all()
+        participants = [x.ajo for x in savings_group.participants.all()]
         
         # Use the AjoUserSerializer for consistent participant data
         
@@ -200,7 +203,7 @@ class SavingsGroupViewSet(viewsets.ModelViewSet):
         return Response(
             {
                 'group_name': savings_group.name,
-                'total_participants': participants.count(),
+                'total_participants': len(participants),
                 'participants': participant_serializer.data
             },
             status=status.HTTP_200_OK

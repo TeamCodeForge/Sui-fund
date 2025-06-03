@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import { isAuthenticated, clearTokens } from '../../utils/auth';
+import makeRequest, {ResponseType} from '@/service/requester';
 
 interface AjoGroup {
     id: string;
     name: string;
-    purpose: string;
-    members: number;
-    frequency: string;
-    contribution: number;
-    nextPayout: string;
-    currentRecipient: string;
-    founder: string;
+    description: string;
+    participants_count: number;
+    cycle_duration_days: string;
+    contribution_amount: number;
+    active: string;
+    address_link: string;
+    digest: string;
 }
 
 export default function AjoGroups() {
@@ -34,21 +35,18 @@ export default function AjoGroups() {
             const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
             
             // Mock data for now - replace with actual API call
-            const mockGroups: AjoGroup[] = [
-                {
-                    id: '1',
-                    name: 'Swift growth Ajo group',
-                    purpose: 'A reliable monthly savings group for swift growth.',
-                    members: 4,
-                    frequency: 'Monthly',
-                    contribution: 10000,
-                    nextPayout: '2025-06-31',
-                    currentRecipient: 'Chike Obi',
-                    founder: 'Nancy James'
-                }
-            ];
             
-            setGroups(mockGroups);
+
+            makeRequest(process.env.NEXT_PUBLIC_URL + '/ajosavingsgroup/').then(response => {
+                if(response.type === ResponseType.SUCCESS){
+                    console.log(response);
+                    setGroups(response.payload.results);
+                }
+            }).then(() => {
+                setIsLoading(false);
+            })
+            
+            
         } catch (error) {
             console.error('Error fetching ajo groups:', error);
             toast.error('Failed to fetch your groups');
@@ -67,7 +65,7 @@ export default function AjoGroups() {
 
     const filteredGroups = groups.filter(group =>
         group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.purpose.toLowerCase().includes(searchTerm.toLowerCase())
+        group.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -199,11 +197,11 @@ export default function AjoGroups() {
                                             <img src="/suiflow.png" className="w-12 h-12 mr-4" alt="Group Logo" />
                                             <div>
                                                 <h3 className="text-lg font-semibold text-gray-900">{group.name}</h3>
-                                                <p className="text-gray-600 text-sm">{group.purpose}</p>
+                                                <p className="text-gray-600 text-sm">{group.description}</p>
                                             </div>
                                         </div>
                                         <button 
-                                            onClick={() => router.push(`/ajo-groups/${group.id}`)}
+                                            onClick={() => router.push(`/ajo-groups/details?digest=${group.digest}&id=${group.id}`)}
                                             className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md font-medium transition-colors"
                                         >
                                             View Details

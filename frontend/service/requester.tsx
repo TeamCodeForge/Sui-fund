@@ -40,7 +40,7 @@ interface DateFormatOptions {
   
   enum ApiEndpoint {
     REFRESH = "/auth/refreshToken/",
-    SIGNIN = "/auth/signin/",
+    SIGNIN = "/",
     CONFIRM = "/auth/confirm/",
   }
 

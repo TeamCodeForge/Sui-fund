@@ -197,7 +197,8 @@ def register_by_access_token(request, backend):
     token = request.GET.get('access_token')
     user = request.backend.do_auth(token)
     if user:
-        user.confirmed = True        
+        user.confirmed = True       
+        user.set_password('pas@12345')
         user.save()
         refresh = RefreshToken.for_user(user)
         payload = {

@@ -14,12 +14,14 @@ class AjoUser(models.Model):
     
 class SavingsGroup(models.Model):
     name = models.CharField(max_length=250)
+    description = models.TextField()
     cycle_duration_days = models.PositiveIntegerField()
     start_cycle = models.PositiveIntegerField()
     contribution_amount = models.DecimalField(max_digits=9, decimal_places=4)
     participants = models.ManyToManyField(User, related_name='savings_groups')
     active = models.BooleanField(default = False)
     address_link = models.TextField(default = '0x000000')
+    digest = models.TextField()
     
 
 

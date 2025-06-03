@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useCurrentAccount, ConnectButton } from '@mysten/dapp-kit';
 import { toast } from 'react-toastify';
@@ -6,13 +6,24 @@ import { isAuthenticated, clearTokens } from '../../utils/auth';
 import { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
 import makeRequest from '@/service/requester'; // Import your makeRequest function
 import { ResponseType } from '@/service/requester';
- 
+import { UserContext } from '@/providers/UserProvider';
+import { getSuiBalance } from '@/tools/suichain';
+
 const keypair = new Ed25519Keypair();
 
 export default function Home() {
     const [showWalletModal, setShowWalletModal] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
+    const [suiBalance, setSuiBalance] = useState(0.0);
     const router = useRouter();
+    const userContext = useContext(UserContext);
+    // Now destructure from userContext with proper null checking
+    if (!userContext) {
+        throw new Error('Component must be used within a UserProvider');
+    }
+
+    const [user, setUser] = userContext;
+
 
     const getAjoUsers = useCallback(async () => {
         try {
@@ -23,7 +34,7 @@ export default function Home() {
                 },
                 true // signed request
             );
-            
+
             if (response.type === ResponseType.SUCCESS) {
                 console.log('Ajo users fetched successfully:', response.payload);
             } else if (response.type === ResponseType.REDIRECT) {
@@ -41,7 +52,7 @@ export default function Home() {
             }
         } catch (error) {
             console.error('Error getting ajo users:', error);
-            
+
             if (error instanceof Error && error.message.includes('Network error')) {
                 console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
@@ -62,7 +73,7 @@ export default function Home() {
                 },
                 true // signed request
             );
-            
+
             if (response.type === ResponseType.SUCCESS) {
                 console.log('Wallet address updated successfully:', response.payload);
             } else if (response.type === ResponseType.REDIRECT) {
@@ -80,16 +91,65 @@ export default function Home() {
             }
         } catch (error) {
             console.error('Error updating wallet address:', error);
-            
+
             if (error instanceof Error && error.message.includes('Network error')) {
                 console.error('Network/CORS error - backend needs to allow cross-origin requests');
             }
         }
     }, [router]);
 
+
+    const fetchCurrentUser = useCallback(async () => {
+        console.log('called fetch current user');
+        try {
+            const response = await makeRequest(
+                process.env.NEXT_PUBLIC_URL + '/ajoajo-users/1/',
+                {
+                    method: 'GET'
+                },
+                true // signed request
+            );
+
+            if (response.type === ResponseType.SUCCESS) {
+                console.log('User fetched successfully:', response.payload);
+
+                // Update the user context with the fetched data
+                // Assuming response.payload contains the user data
+                if (response.payload && setUser) {
+
+                    console.log(response.payload);
+                    setUser(response.payload);
+
+                    // Get just SUI balance
+                    const suiBalance = await getSuiBalance(response.payload.wallet_address, 'testnet');
+                    console.log(suiBalance);
+                    setSuiBalance(suiBalance.balanceInSui);
+                }
+            } else if (response.type === ResponseType.REDIRECT) {
+                console.log('Redirect required:', response.link);
+                if (response.link) {
+                    router.push(response.link);
+                }
+            } else if (response.type === ResponseType.KNOWN_ERROR) {
+                console.error('Known error fetching user:', response.message);
+            } else if (response.type === ResponseType.EXPIRED) {
+                console.log('Session expired, redirecting to signin');
+                if (response.link) {
+                    router.push(response.link);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching current user:', error);
+
+            if (error instanceof Error && error.message.includes('Network error')) {
+                console.error('Network/CORS error - backend needs to allow cross-origin requests');
+            }
+        }
+    }, [setUser, router]); // Dependencies for useCallback
+
     useEffect(() => {
         console.log('called use effect in home');
-        
+
         if (!isAuthenticated()) {
             router.push('/');
             return;
@@ -101,6 +161,7 @@ export default function Home() {
             updateWalletAddress();
             getAjoUsers();
             setIsInitialized(true);
+            fetchCurrentUser();
         }
     }, [router, updateWalletAddress, getAjoUsers, isInitialized]);
 
@@ -115,6 +176,23 @@ export default function Home() {
         router.push('/create-pool');
     };
 
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(Ed25519Keypair.fromSecretKey(user.wallet_address).getPublicKey().toSuiAddress());
+            setCopied(true);
+            toast.info('Wallet address copied')
+
+            // Reset the copied state after 2 seconds
+            setTimeout(() => {
+                setCopied(false);
+            }, 2000);
+        } catch (error) {
+            console.error('Failed to copy text:', error);
+        }
+    };
+
     return (
         <div className="flex h-screen bg-gray-50">
             {/* Sidebar */}
@@ -125,7 +203,7 @@ export default function Home() {
                         <h1 className="text-xl font-bold text-gray-800">Sui-Fund</h1>
                     </div>
                 </div>
-                
+
                 <nav className="p-4 h-[90%] flex flex-col justify-between">
                     <div className="space-y-1">
                         <div className="flex items-center p-3 bg-blue-50 text-blue-600 rounded-lg">
@@ -136,10 +214,10 @@ export default function Home() {
                             </div>
                             <span className="font-medium">Dashboard</span>
                         </div>
-                        
-                        <button 
-                        onClick={() => router.push('/ajo-groups')}
-                        className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer">
+
+                        <button
+                            onClick={() => router.push('/ajo-groups')}
+                            className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer">
                             <div className="w-5 h-5 mr-3">
                                 <svg fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
@@ -147,7 +225,7 @@ export default function Home() {
                             </div>
                             <span>Your groups</span>
                         </button>
-                        
+
                         <div className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer">
                             <div className="w-5 h-5 mr-3">
                                 <svg fill="currentColor" viewBox="0 0 20 20">
@@ -157,9 +235,9 @@ export default function Home() {
                             <span>Notifications</span>
                         </div>
                     </div>
-                    
+
                     <div className="mt-8 pt-4 border-t border-gray-200">
-                        <button 
+                        <button
                             onClick={handleCreatePool}
                             className="flex items-center w-full p-3 text-blue-600 hover:bg-blue-50 rounded-lg"
                         >
@@ -170,8 +248,8 @@ export default function Home() {
                             </div>
                             <span className="font-medium">Create Pool</span>
                         </button>
-                        
-                        <div 
+
+                        <div
                             onClick={handleLogout}
                             className="flex items-center p-3 text-gray-600 hover:bg-gray-50 rounded-lg cursor-pointer mt-1"
                         >
@@ -193,7 +271,7 @@ export default function Home() {
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-bold text-blue-600">Dashboard</h2>
                         <div className="flex items-center">
-                            <span className="text-gray-700 mr-3">GM GM, Nancy!</span>
+                            <span className="text-gray-700 mr-3">{user.user.username}!</span>
                             <div className="w-10 h-10 bg-orange-400 rounded-full flex items-center justify-center">
                                 <span className="text-white font-medium text-sm">N</span>
                             </div>
@@ -212,32 +290,48 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
                         <div className="bg-blue-500 text-white p-6 rounded-lg relative">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-blue-100 text-sm">Wallet Balance</span>
+                                <span className="text-blue-100 text-sm">SUI Wallet Balance</span>
                                 <div className="w-6 h-6 text-blue-200">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                    </svg>
+                                    <button
+                                        onClick={handleCopy}
+                                        className="flex items-center justify-center p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 group"
+                                        title="Click to copy 'hello' to clipboard"
+                                    >
+                                        <svg
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            className="w-6 h-6"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M8 16H6m0 0a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                            />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
-                            <div className="text-3xl font-bold">N15,300</div>
+                            <div className="text-3xl font-bold">SUI {suiBalance}</div>
                         </div>
-                        
+
                         <div className="bg-blue-500 text-white p-6 rounded-lg relative">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-blue-100 text-sm">SUI</span>
+                                <span className="text-blue-100 text-sm">All Groups</span>
                                 <div className="w-6 h-6 text-blue-200">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                     </svg>
                                 </div>
                             </div>
-                            <div className="text-3xl font-bold">3.45</div>
+                            <div className="text-3xl font-bold">45</div>
                         </div>
                     </div>
 
                     {/* Create Pool Section */}
                     <div className="flex flex-col items-center justify-center py-24">
-                        <div 
+                        <div
                             onClick={handleCreatePool}
                             className="w-32 h-24 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center mb-6 cursor-pointer hover:border-gray-500 transition-colors"
                         >

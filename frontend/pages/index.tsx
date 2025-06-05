@@ -48,7 +48,7 @@ export default function SignIn() {
     e.preventDefault();
     setIsLoading(true);
     
-    try {
+    try { 
       // Call the authentication API
       const response = await fetch(process.env.NEXT_PUBLIC_URL + '/auth/token/', {
         method: 'POST',

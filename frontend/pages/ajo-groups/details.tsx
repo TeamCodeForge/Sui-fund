@@ -1,12 +1,15 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
-import { getCycleSummary } from '@/tools/suiutiles';
+import { getCycleSummary, getContributionStatus } from '@/tools/suiutiles';
 import { isAuthenticated, clearTokens } from '../../utils/auth';
 import { SuiSavingsGroupClient } from '@/tools/suichain';
 import { UserContext } from '@/providers/UserProvider';
 import makeRequest, { ResponseType } from '@/service/requester';
 import { desc } from 'framer-motion/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import GroupDetailsSkeleton, { GroupDetailsDashboard, GroupDetailsMembers } from './components/Loading';
+
 
 import { ReactNode, ReactElement } from 'react';
 import BasicLayout from '@/layouts/BasicLayout';
@@ -21,6 +24,7 @@ interface Member {
     };
 
     avatar: string;
+    wallet_address: string;
 }
 
 interface GroupDetails {
@@ -36,7 +40,14 @@ interface GroupDetails {
 
 }
 
+interface Participant {
+    wallet_address: string
+}
+
 export default function GroupDetails() {
+    const [loadingDashboard, setLoadingDashboard] = useState(true);
+    const [loadingMembers, setLoadingMemebers] = useState(true);
+
     const [group, setGroup] = useState<GroupDetails | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [participants, setParticipants] = useState<Member[]>([])
@@ -47,6 +58,10 @@ export default function GroupDetails() {
     const [cycle_duration_days, setCycleDurationDays] = useState<number>(0)
     const [totalContribution, setTotalContribution] = useState<number>(0)
     const [expectedTotal, setExpectedTotal] = useState<number>(0);
+
+    const [contributed, setContributed] = useState<string[]>([]);
+    const [nextRecipient, setNextRecipient] = useState<string>('0x0000000000000000000000000000000000000000000000000000000000000000');
+    const [nextRecipentName, setNextRecipientName] = useState<string>('')
 
     const [allContributed, setAllContributed] = useState<Boolean>(false);
     const [cycleCount, setCycleCount] = useState<number>(0);
@@ -73,6 +88,23 @@ export default function GroupDetails() {
         network: 'testnet'
     })
 
+
+    useEffect(() => {
+
+        for (var i in participants) {
+            console.log('running ...')
+            if (participants[i].wallet_address === nextRecipient) {
+                setNextRecipientName(participants[i].user.username)
+                console.log('found the recipient');
+                return;
+            } else {
+                setNextRecipientName('Pending ...')
+            }
+        }
+
+
+    }, [nextRecipient, participants])
+
     useEffect(() => {
         if (!isAuthenticated()) {
             router.push('/');
@@ -88,7 +120,21 @@ export default function GroupDetails() {
                         console.log(response);
                         setTotalContribution(response.contributionsReceived)
                         setExpectedTotal(response.totalExpected / 1_000_000_000)
+                        setNextRecipient(response.nextRecipientAddress);
+                        setAllContributed(response.allContributed);
+                        setCycleCount(response.currentCycle)
+
+                        getContributionStatus(link).then(response => {
+                            console.log(response);
+                            setContributed(response.contributors)
+                        }).catch(error => {
+                            console.error(error);
+                        }).then(() => {
+                            setLoadingDashboard(false);
+                        })
                     });
+
+
                 }
 
 
@@ -97,7 +143,16 @@ export default function GroupDetails() {
                 makeRequest(process.env.NEXT_PUBLIC_URL + `/ajosavingsgroup/${id}`).then(response => {
                     if (response.type === ResponseType.SUCCESS) {
                         console.log(response);
-                        setParticipants(response.payload['participants'])
+                        let participants = response.payload['participants']
+                        let updated_participants = []
+
+                        for (var i in participants) {
+                            let part = participants[i]
+                            part.wallet_address = Ed25519Keypair.fromSecretKey(part.wallet_address).getPublicKey().toSuiAddress();
+                            updated_participants.push(part);
+                        }
+
+                        setParticipants(updated_participants);
                         setGroupName(response.payload['name'])
                         setDescription(response.payload['description'])
                         setContributionAmount(parseFloat(response.payload['contribution_amount']))
@@ -107,6 +162,7 @@ export default function GroupDetails() {
                     }
                 }).then(() => {
                     setIsLoading(false);
+                    setLoadingMemebers(false);
                 })
             }
         }
@@ -123,7 +179,7 @@ export default function GroupDetails() {
                 frequency: 'Monthly',
                 members: 4,
                 nextPayout: '2025-06-31',
-                currentRecipient: 'Chike Obi',
+                currentRecipient: nextRecipentName,
                 founder: 'Nancy James',
 
             };
@@ -169,9 +225,10 @@ export default function GroupDetails() {
         );
     }
 
+
     return (
         <>
-           
+
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
                 {/* Header */}
@@ -193,9 +250,9 @@ export default function GroupDetails() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-8 bg-gray-50 overflow-y-auto">
+                <div className="flex-1 p-1 md:p-8 bg-gray-50 overflow-y-auto">
                     {/* Group Header */}
-                    <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
+                    {loadingDashboard ? <GroupDetailsDashboard /> : <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
                         <div className="flex items-center gap-2 mb-4">
                             <h1 className="text-2xl font-bold text-gray-900">{groupname}</h1>
                             <svg
@@ -224,11 +281,12 @@ export default function GroupDetails() {
                             <div><strong>Members:</strong> {participants.length}</div>
                             <div><strong>Contribution Amount (SUI):</strong> {contributionAmount}</div>
                             <div><strong>Expected Total Amount (SUI):</strong> {expectedTotal}</div>
-                            <div><strong>Current Recipient:</strong> {group.currentRecipient}</div>
+                            <div><strong>Cycle Count:</strong> {cycleCount}</div>
+                            <div><strong>Current Recipient:</strong> {nextRecipentName}</div>
 
                         </div>
 
-                        <div className='flex flex-col md:flex-row justify-between my-4'>
+                        <div className='flex flex-col md:flex-row justify-between my-4 gap-2'>
                             <button
                                 className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group"
                                 onClick={() => {
@@ -249,35 +307,93 @@ export default function GroupDetails() {
                             </button>
 
                             <button
-                                className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-purple-400/20 backdrop-blur-sm overflow-hidden group"
+                                className={`relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold rounded-xl shadow-lg transition-all duration-300 ease-out border ${allContributed && nextRecipient !== '0x0000000000000000000000000000000000000000000000000000000000000000'
+                                    ? 'text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:shadow-xl transform hover:scale-105 border-purple-400/20 backdrop-blur-sm'
+                                    : allContributed
+                                        ? 'text-white bg-gradient-to-r from-green-500 to-teal-600 hover:shadow-xl transform hover:scale-105 border-green-400/20 backdrop-blur-sm'
+                                        : 'text-gray-400 bg-gray-200 cursor-not-allowed border-gray-300'
+                                    }`}
                                 onClick={() => {
+                                    if (!allContributed) return;
+
                                     const link = Array.isArray(router.query.link)
                                         ? router.query.link[0]
                                         : router.query.link;
 
                                     if (link) {
-                                        client.startNewCycle(link, user.wallet_address).then(response => {
-                                            console.log(response);
-                                        });
+                                        if (nextRecipient !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+                                            // Sign Payout logic
+
+                                        } else {
+                                            // Start New Cycle logic
+                                            client.startNewCycle(link, user.wallet_address).then(response => {
+                                                console.log(response);
+                                            });
+                                        }
                                     }
                                 }}
+                                disabled={!allContributed}
                             >
-                                🔄 Start New Cycle
+                                {!allContributed
+                                    ? 'Waiting for all contributions'
+                                    : nextRecipient !== '0x0000000000000000000000000000000000000000000000000000000000000000'
+                                        ? '✍️ Sign Payout'
+                                        : '🔄 Start New Cycle'
+                                }
                             </button>
+
                         </div>
 
-                    </div>
+                    </div>}
+
+
 
                     {/* Members Section */}
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    {loadingDashboard ? <GroupDetailsMembers /> : <div className="bg-white rounded-lg p-6 mb-4 shadow-sm border border-gray-200">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 border-b-2 border-blue-500 pb-2 inline-block">
+                            Members Contributed
+                        </h2>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {participants.map((member) => {
+
+                                console.log(member);
+
+                                for (var i in contributed) {
+                                    if (member.wallet_address === contributed[i]) {
+                                        return (
+                                            <div key={member.id} className="flex items-center bg-blue-500 text-white p-4 rounded-lg">
+                                                <div className="w-16 h-16 bg-gray-300 rounded-full mr-4 overflow-hidden">
+                                                    <div className="w-full h-full bg-blue-400 flex items-center justify-center">
+                                                        <span className="text-white font-bold text-lg">
+                                                            {member.user.username.split(' ').map(n => n[0]).join('')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-lg">Name: {member.user.username}</h3>
+
+                                                    <p className="text-blue-100">email: {member.user.email}</p>
+                                                </div>
+                                            </div>
+                                        )
+                                    }
+
+                                }
+                            })}
+                        </div>
+                    </div>}
+
+                    {/* Members Section */}
+                    {loadingMembers ? <GroupDetailsMembers /> : <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                         <h2 className="text-xl font-bold text-gray-900 mb-6 border-b-2 border-blue-500 pb-2 inline-block">
                             Members Details
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {participants.map((member) => (
-                                <div key={member.id} className="flex items-center bg-blue-500 text-white p-4 rounded-lg">
-                                    <div className="w-16 h-16 bg-gray-300 rounded-full mr-4 overflow-hidden">
+                                <div key={member.id} className="flex md:items-center bg-blue-500 text-white p-4 rounded-lg">
+                                    <div className="hidden md:block w-16 h-16 bg-gray-300 rounded-full mr-4 overflow-hidden">
                                         <div className="w-full h-full bg-blue-400 flex items-center justify-center">
                                             <span className="text-white font-bold text-lg">
                                                 {member.user.username.split(' ').map(n => n[0]).join('')}
@@ -285,20 +401,19 @@ export default function GroupDetails() {
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-lg">Name: {member.user.username}</h3>
-
+                                        <h3 className="font-semibold lg:text-lg">Name: {member.user.username}</h3>
                                         <p className="text-blue-100">email: {member.user.email}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </div>}
                 </div>
             </div>
         </>
     );
 }
 
-GroupDetails.getLayout = function(page: ReactNode) : ReactElement{
+GroupDetails.getLayout = function (page: ReactNode): ReactElement {
     return (<BasicLayout>{page}</BasicLayout>)
 }

@@ -132,7 +132,7 @@ export default function AjoGroups() {
                         <div className="space-y-4">
                             {filteredGroups.map((group) => (
                                 <div key={group.id} className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
                                         <div className="flex items-center">
                                             <img src="/suiflow.png" className="w-12 h-12 mr-4" alt="Group Logo" />
                                             <div>

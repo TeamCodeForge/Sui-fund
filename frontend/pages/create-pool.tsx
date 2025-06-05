@@ -151,9 +151,21 @@ export default function CreatePool() {
 
     const handleCreatePool = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (selectedMembers.length === 0) {
+            toast.error('Please select at least one member');
+            return;
+        }
+        
         setIsLoading(true);
     
-        const participants = ajoUsers.map((_user, index) => ({
+        // Filter ajoUsers to only include selected members
+        const selectedAjoUsers = ajoUsers.filter(user => 
+            selectedMembers.includes(user.wallet_address)
+        );
+    
+        // Create participants array from selected members only
+        const participants = selectedAjoUsers.map((_user, index) => ({
             wallet: _user.wallet_address,
             position: index + 1
         }));
@@ -180,7 +192,8 @@ export default function CreatePool() {
                 'cycle_duration_days': frequency,
                 'contribution_amount': contributionAmount,
                 'start_cycle': startDate,
-                'participant_ids': ajoUsers.map(user => user.user.id),
+                // Only include IDs of selected members
+                'participant_ids': selectedAjoUsers.map(user => user.user.id),
                 'active': true
             };
     
@@ -201,11 +214,9 @@ export default function CreatePool() {
             console.error('Error creating savings group:', error);
             toast.error('NO Coin available for transaction');
         } finally {
-            // This will always run, whether success or error
             setIsLoading(false);
         }
     };
-
     
     const handleInviteMembers = () => {
         setShowSuccessModal(false);
@@ -269,7 +280,7 @@ export default function CreatePool() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Contribution Amount</label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     value={contributionAmount}
                                     onChange={(e) => setContributionAmount(e.target.value)}
                                     className="w-full p-3 border border-gray-300 rounded-md bg-white"
@@ -279,13 +290,13 @@ export default function CreatePool() {
                             </div>
                             
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Frequency in days</label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     value={frequency}
                                     onChange={(e) => setFrequency(e.target.value)}
                                     className="w-full p-3 border border-gray-300 rounded-md bg-white"
-                                    placeholder="E.g Daily, Monthly, Yearly"
+                                    placeholder="10, 20, 30 ..."
                                     required
                                 />
                             </div>
@@ -320,11 +331,11 @@ export default function CreatePool() {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Start Payment after (cycle):</label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                     className="w-full p-3 border border-gray-300 rounded-md bg-white"
-                                    placeholder="Select Date..."
+                                    placeholder="1, 2, 3 ..."
                                     required
                                 />
                             </div>

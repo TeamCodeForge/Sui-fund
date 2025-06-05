@@ -1,5 +1,6 @@
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
+import { bcs } from '@mysten/sui/bcs';
 
 interface CycleSummary {
   currentCycle: number;
@@ -10,10 +11,23 @@ interface CycleSummary {
   allContributed: boolean;
 }
 
+
+interface ContributionSummary {
+  currentContribution: number,
+      expectedTotal: number,
+      contributors: string[],
+      pending: string[]
+}
+
+
+
 /**
  * Get comprehensive cycle summary of a savings group
  * @param groupObjectId - Object ID of the SavingsGroup
  * @returns Promise<CycleSummary> - Complete cycle summary of the savings group
+ * 
+ * 
+ * 
  */
 export async function getCycleSummary(
   groupObjectId: string,
@@ -82,3 +96,68 @@ export async function getCycleSummary(
     allContributed: allContributed as boolean,
   };
 }
+  
+
+async function getContributionStatus(
+  groupObjectId: string,
+): Promise<ContributionSummary> {
+  const tx = new Transaction();
+  
+  // Call the get_contribution_status function
+  tx.moveCall({
+    target: `${process.env.NEXT_PUBLIC_MOVE_PACKAGE_ID}::codeforge::get_contribution_status`,
+    arguments: [tx.object(groupObjectId)],
+  });
+  
+  const client = new SuiClient({ url: getFullnodeUrl('testnet') });
+  
+  // Execute the transaction in dev inspect mode
+  const response = await client.devInspectTransactionBlock({
+    transactionBlock: tx,
+    sender: '0x0000000000000000000000000000000000000000000000000000000000000000',
+  });
+  
+  if (response.error) {
+    throw new Error(`Failed to get contribution status: ${response.error}`);
+  }
+  
+  const returnValues = response.results?.[0]?.returnValues;
+  
+  if (!returnValues || returnValues.length !== 4) {
+    throw new Error('Expected 4 return values (u64, u64, vector<address>, vector<address>)');
+  }
+
+  // Parse each return value
+  const [
+    currentContributionBytes,
+    expectedTotalBytes,
+    contributorsBytes,
+    pendingBytes
+  ] = returnValues;
+
+  // Decode the values
+  const currentContribution = bcs.u64().parse(
+    new Uint8Array(currentContributionBytes[0])
+  );
+  
+  const expectedTotal = bcs.u64().parse(
+    new Uint8Array(expectedTotalBytes[0])
+  );
+  
+  // For vector<address>, we first need to parse the length, then each address
+  const contributors = bcs.vector(bcs.Address).parse(
+    new Uint8Array(contributorsBytes[0])
+  );
+  
+  const pending = bcs.vector(bcs.Address).parse(
+    new Uint8Array(pendingBytes[0])
+  );
+
+  return {
+    currentContribution: Number(currentContribution), // Convert bigint to number if needed
+    expectedTotal: Number(expectedTotal),             // Convert bigint to number if needed
+    contributors: contributors as string[],
+    pending: pending as string[],
+  };
+}
+  export {getContributionStatus,};

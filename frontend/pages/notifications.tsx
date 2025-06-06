@@ -6,15 +6,12 @@ import { ReactNode, ReactElement } from 'react';
 import BasicLayout from '@/layouts/BasicLayout';
 import { useContext } from 'react';
 import { UserContext } from '@/providers/UserProvider';
+import makeRequest from '@/service/requester';
 
 
 interface Notification {
     id: number;
-    type: 'invite' | 'contribution' | 'payout' | 'cycle' | 'system';
-    title: string;
     message: string;
-    timestamp: string;
-    read: boolean;
 }
 
 export default function Notifications() {
@@ -35,19 +32,14 @@ export default function Notifications() {
             router.push('/');
             return;
         }
-        
-        // Mock notification data matching the design
-        const mockNotifications: Notification[] = [
-            {
-                id: 1,
-                type: 'invite',
-                title: 'Invite!',
-                message: "You've been invited to join a Trusted circle.",
-                timestamp: '1m Ago',
-                read: false
-            }
-        ];
-        setNotifications(mockNotifications);
+
+        makeRequest(process.env.NEXT_PUBLIC_URL + '/ajonotifications').then(response => {
+            console.log(response);
+            setNotifications(response.payload);
+        }).catch(error => {
+            console.error(error);
+        })
+
     }, [router]);
 
     const handleLogout = () => {
@@ -96,19 +88,13 @@ export default function Notifications() {
                                 <div className="flex-1">
                                     <div className="flex items-center space-x-2">
                                         <h4 className="text-lg font-medium text-gray-900">
-                                            {notification.title}
+                                            Alert
                                         </h4>
-                                        {!notification.read && (
-                                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                        )}
+
                                     </div>
                                     <p className="text-gray-600 mt-1">{notification.message}</p>
                                 </div>
                                 
-                                {/* Timestamp */}
-                                <div className="flex-shrink-0 text-sm text-gray-500">
-                                    {notification.timestamp}
-                                </div>
                             </div>
                         ))}
                     </div>

@@ -4,8 +4,30 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from ajo.models import AjoUser
-from ajo.serializers import AjoUserSerializer
+from ajo.models import AjoUser, MyNotification
+from ajo.serializers import AjoUserSerializer, NotificationSerializer
+
+class NotificationViewSet(viewsets.ViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def list(self, request):
+        """
+        Returns all notifications for the authenticated user
+        Can be filtered by notification_type and is_read status
+        """
+        queryset = MyNotification.objects.filter(user=request.user).order_by('-id')
+        
+        # Optional filters
+        notification_type = request.query_params.get('type', None)
+        is_read = request.query_params.get('is_read', None)
+        
+        if notification_type:
+            queryset = queryset.filter(notification_type=notification_type)
+        if is_read is not None:
+            queryset = queryset.filter(is_read=is_read.lower() == 'true')
+        
+        serializer = NotificationSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class AjoUserViewSet(viewsets.ModelViewSet):

@@ -3,12 +3,16 @@ from rest_framework import serializers
 from main.models import User
 from .models import AjoUser
 from rest_framework import serializers
-from .models import SavingsGroup
+from .models import SavingsGroup, MyNotification
 from logging import getLogger
 
 logger = getLogger(__name__)
 
 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MyNotification
+        fields = '__all__'
 
 class AUserSerializer(serializers.ModelSerializer):
     """Serializer for the User model"""

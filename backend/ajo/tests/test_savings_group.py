@@ -93,12 +93,10 @@ class SavingsGroupViewSetTestCase(APITestCase):
 
     def test_create_savings_group(self):
         """
-        Test creating a new savings group with notifications
+        Test creating a new savings group with notifications and verify notifications endpoint
         """
-        
         user2 = self._create_user('user22@example.com')
         user3 = self._create_user('user33@example.com')
-        
         
         self.client.force_authenticate(user=self.user1)
         url = reverse('savingsgroup-list')
@@ -108,7 +106,6 @@ class SavingsGroupViewSetTestCase(APITestCase):
             'cycle_duration_days': 45,
             'start_cycle': 1,
             'description': 'This is a savings group',
-            'description': 'Group workds',
             'contribution_amount': '150.0000',
             'participant_ids': [user2.id, user3.id],
             'active': False,
@@ -136,7 +133,6 @@ class SavingsGroupViewSetTestCase(APITestCase):
         # Check if creator was added as participant
         self.assertIn(self.user1, created_group.participants.all())
         
-        
         # Check if notifications were created (creator + 2 participants = 3 notifications)
         final_notification_count = MyNotification.objects.count()
         self.assertEqual(final_notification_count, initial_notification_count + 3)
@@ -153,7 +149,35 @@ class SavingsGroupViewSetTestCase(APITestCase):
         )
         self.assertEqual(invitation_notifications.count(), 2)
 
-
+        # ========== TEST NOTIFICATIONS ENDPOINT ==========
+        
+        # Test creator's notifications
+        self.client.force_authenticate(self.user1)
+        notifications_url = reverse('notification-list')
+        
+        # Get all notifications for creator
+        response = self.client.get(notifications_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)  # Creator should have 1 notification
+        
+        # Verify notification content
+        creator_notification_data = response.data[0]
+        self.assertIn('successfully created', creator_notification_data['message'])
+        
+        
+        
+        # Test participant's notifications
+        self.client.force_authenticate(user=user2)
+        response = self.client.get(notifications_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)  # Participant should have 1 invitation
+        
+        participant_notification_data = response.data[0]
+        self.assertIn('invited to join', participant_notification_data['message'])
+        
+        
+       
+      
         
     def test_participants_list(self):
         """

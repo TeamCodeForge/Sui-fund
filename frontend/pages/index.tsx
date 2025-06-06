@@ -24,7 +24,7 @@ export default function SignIn() {
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -40,7 +40,7 @@ export default function SignIn() {
         console.error('Error loading stored keypair:', error);
       }
     }
-    
+
     // Generate new keypair if none exists
     const newKeypair = Ed25519Keypair.generate();
     const keypairData = {
@@ -52,14 +52,14 @@ export default function SignIn() {
   };
 
   useEffect(() => {
-   
+
   }, [router])
 
   const handleSignIn = async (e: React.MouseEvent<HTMLButtonElement> | React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    try { 
+
+    try {
       // Call the authentication API
       const response = await fetch(process.env.NEXT_PUBLIC_URL + '/auth/token/', {
         method: 'POST',
@@ -72,7 +72,7 @@ export default function SignIn() {
           password
         })
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         try {
@@ -83,16 +83,16 @@ export default function SignIn() {
         }
         return;
       }
-      
+
       const data = await response.json();
-      
+
       // Store the authentication token
       storeTokens(data);
-      
-     
+
+
       // Successfully logged in
       toast.success('Sign in successful!');
-      
+
       // Always redirect to home dashboard after successful authentication
       router.push('/home');
     } catch (error) {
@@ -107,16 +107,16 @@ export default function SignIn() {
     return (
       <div className="fixed inset-0 bg-blue-600 flex items-center justify-center z-50">
         <div className="animate-bounce">
-          <img 
-            src="/suiflow.png" 
-            className="w-24 h-24 mx-auto" 
-            alt="Sui-Fund Logo" 
+          <img
+            src="/suiflow.png"
+            className="w-24 h-24 mx-auto"
+            alt="Sui-Fund Logo"
           />
           <h1 className="text-3xl font-bold text-white text-center mt-4">
             Sui-Fund
           </h1>
           <p className="text-white text-center mt-2">
-            Loading...
+            Effortless Saving, Real Outcome
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export default function SignIn() {
       {/* Full width mobile banner */}
       <div className="md:hidden w-full bg-blue-600 py-6 px-4 flex flex-col justify-center items-center relative">
         <div className="absolute inset-0 bg-cover bg-center"
-             style={{backgroundImage: "url('/sui-waves.svg')"}}></div>
+          style={{ backgroundImage: "url('/sui-waves.svg')" }}></div>
         <div className="relative z-10 text-white text-center">
           <div className="flex items-center justify-center">
             <img src="/suiflow.png" className="w-7 h-7 mr-2" alt="Sui-Fund Logo" />
@@ -140,87 +140,87 @@ export default function SignIn() {
 
       {/* Left side with form */}
       <div className="w-full md:w-1/2 flex items-center justify-center py-6 px-5">
-      <div className="w-full max-w-md">
-        <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-gray-800">
-          Sign In to Sui-Fund
-        </h2>
-        
-        <div className="w-full flex flex-col items-center justify-center space-y-6">
-          {/* Google Sign In Button */}
-          <SocialAuth />
-          
-          {/* Divider */}
-          <div className="w-full max-w-sm">
-            <div className="relative flex items-center justify-center mb-6">
-              <div className="border-t border-gray-300 w-full"></div>
-              <div className="bg-white px-4 text-sm text-gray-500">or</div>
-              <div className="border-t border-gray-300 w-full"></div>
-            </div>
-          </div>
+        <div className="w-full max-w-md">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-gray-800">
+            Sign In to Sui-Fund
+          </h2>
 
-          {/* Email and Password Login Form */}
-          <form onSubmit={handleSignIn} className="w-full max-w-sm space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your email"
-              />
+          <div className="w-full flex flex-col items-center justify-center space-y-6">
+            {/* Google Sign In Button */}
+            <SocialAuth />
+
+            {/* Divider */}
+            <div className="w-full max-w-sm">
+              <div className="relative flex items-center justify-center mb-6">
+                <div className="border-t border-gray-300 w-full"></div>
+                <div className="bg-white px-4 text-sm text-gray-500">or</div>
+                <div className="border-t border-gray-300 w-full"></div>
+              </div>
             </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter your password"
-              />
-            </div>
-            
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </button>
-          </form>
-          
-          {/* Sign Up Link */}
-          <div className="w-full max-w-sm">
-            <div className="text-center">
-              <p className="text-gray-600 text-sm">
-                Don't have an account?{' '}
-                <a 
-                  href="/onboarding" 
-                  className="text-blue-500 hover:text-blue-700 font-medium transition-colors"
-                >
-                  Sign Up
-                </a>
-              </p>
+
+            {/* Email and Password Login Form */}
+            <form onSubmit={handleSignIn} className="w-full max-w-sm space-y-4">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your password"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </button>
+            </form>
+
+            {/* Sign Up Link */}
+            <div className="w-full max-w-sm">
+              <div className="text-center">
+                <p className="text-gray-600 text-sm">
+                  Don't have an account?{' '}
+                  <a
+                    href="/onboarding"
+                    className="text-blue-500 hover:text-blue-700 font-medium transition-colors"
+                  >
+                    Sign Up
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
       {/* Right side with background image and logo - hidden on mobile */}
       <div className="hidden md:flex md:w-1/2 bg-blue-600 flex-col justify-center items-center relative">
-        <div className="absolute inset-0 bg-cover bg-center" 
-             style={{backgroundImage: "url('/sui-waves.svg')"}}></div>
+        <div className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/sui-waves.svg')" }}></div>
         <div className="relative z-10 text-white text-center">
           <div className="flex items-center mb-4">
             <img src="/suiflow.png" className="w-8 h-8 mr-2" alt="Sui-Fund Logo" />

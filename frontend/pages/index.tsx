@@ -15,8 +15,19 @@ export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
   const account = useCurrentAccount();
+
+  useEffect(() => {
+    // Hide splash screen after 2 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
 
   // Generate or get keypair for the user
   const getOrCreateKeypair = () => {
@@ -91,6 +102,26 @@ export default function SignIn() {
       setIsLoading(false);
     }
   };
+
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 bg-blue-600 flex items-center justify-center z-50">
+        <div className="animate-bounce">
+          <img 
+            src="/suiflow.png" 
+            className="w-24 h-24 mx-auto" 
+            alt="Sui-Fund Logo" 
+          />
+          <h1 className="text-3xl font-bold text-white text-center mt-4">
+            Sui-Fund
+          </h1>
+          <p className="text-white text-center mt-2">
+            Loading...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='md:flex md:flex-row h-screen'>

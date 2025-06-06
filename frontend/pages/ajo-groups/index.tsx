@@ -159,7 +159,7 @@ export default function AjoGroups() {
                             </div>
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No groups found</h3>
                             <p className="text-gray-600 mb-6">
-                                {searchTerm ? 'No groups match your search.' : "You haven't joined any Ajo groups yet."}
+                                {searchTerm ? 'No groups match your search.' : "You haven't joined any groups yet."}
                             </p>
                             <button 
                                 onClick={() => router.push('/create-pool')}

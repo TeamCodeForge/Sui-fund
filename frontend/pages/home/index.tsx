@@ -295,7 +295,7 @@ export default function Home() {
                             <div className="text-black text-4xl font-light">+</div>
                         </div>
                         <p className="text-gray-600 text-lg text-center max-w-md">
-                            Create your own Ajo group and start inviting members.
+                            Create your own group and start inviting members.
                         </p>
                     </div>
                 </div>

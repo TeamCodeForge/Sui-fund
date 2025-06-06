@@ -374,17 +374,12 @@ export default function CreatePool() {
                             <img src="/suiflow.png" className="w-16 h-16 mx-auto mb-4" alt="Sui-Fund Logo" />
                             <h3 className="text-2xl font-bold text-gray-900 mb-2">Congratulations!</h3>
                             <p className="text-gray-600">
-                                You've successfully created your Ajo group.<br />
-                                Invite members and start saving!
+                                You've successfully created your  group.<br />
+                                
                             </p>
                         </div>
                         
-                        <button
-                            onClick={handleInviteMembers}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-md font-medium"
-                        >
-                            Invite Members
-                        </button>
+
                     </div>
                 </div>
             )}

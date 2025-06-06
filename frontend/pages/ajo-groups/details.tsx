@@ -47,10 +47,12 @@ interface Participant {
 export default function GroupDetails() {
     const [loadingDashboard, setLoadingDashboard] = useState(true);
     const [loadingMembers, setLoadingMemebers] = useState(true);
+    const [contributing, setsContributing] = useState(false);
 
     const [group, setGroup] = useState<GroupDetails | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [participants, setParticipants] = useState<Member[]>([])
+    
 
     const [groupname, setGroupName] = useState<string>('')
     const [contributionAmount, setContributionAmount] = useState<number>(0.00)
@@ -288,17 +290,24 @@ export default function GroupDetails() {
 
                         <div className='flex flex-col md:flex-row justify-between my-4 gap-2'>
                             <button
-                                className="relative inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group"
+                                className={`relative ${contributing ? 'bg-gray-500' : 'bg-gradient-to-r from-emerald-500 to-teal-600'} inline-flex items-center justify-center px-8 py-4 text-sm font-semibold text-white  rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-out border border-emerald-400/20 backdrop-blur-sm overflow-hidden group`}
                                 onClick={() => {
+                                    if(contributing){
+                                        return;
+                                    }
+
+                                    
                                     const link = Array.isArray(router.query.link)
                                         ? router.query.link[0]
                                         : router.query.link;
 
                                     if (link) {
                                         console.log(contributionAmount);
+                                        setsContributing(true)
                                         client.contribute(link, contributionAmount, user.wallet_address).then(response => {
                                             console.log(response);
                                             toast.info('Contribution Added')
+                                            setsContributing(false);
                                         });
                                     }
                                 }}

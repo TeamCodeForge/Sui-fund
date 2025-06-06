@@ -43,6 +43,7 @@ export default function AjoGroups() {
     }, [router]);
 
     const fetchAjoGroups = async () => {
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
             
@@ -62,9 +63,7 @@ export default function AjoGroups() {
         } catch (error) {
             console.error('Error fetching ajo groups:', error);
             toast.error('Failed to fetch your groups');
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     const handleLogout = () => {

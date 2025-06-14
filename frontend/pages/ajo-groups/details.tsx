@@ -308,6 +308,7 @@ export default function GroupDetails() {
                                             console.log(response);
                                             toast.info('Contribution Added')
                                             setsContributing(false);
+                                            
                                         });
                                     }
                                 }}
@@ -337,7 +338,9 @@ export default function GroupDetails() {
                                             // Start New Cycle logic
                                             client.startNewCycle(link, user.wallet_address).then(response => {
                                                 console.log(response);
-                                            });
+                                            }).then(()=> {
+                                                router.reload();
+                                            })
                                         }
                                     }
                                 }}
